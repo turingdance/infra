@@ -60,7 +60,7 @@ func ExampleXError_StackTrace() {
 	fmt.Println(containFile)
 
 	// Output:
-	// github.com/techidea8/codectl/infra/xerror.ExampleXError_StackTrace
+	// github.com/turingdance/infra/xerror.ExampleXError_StackTrace
 	// 52
 	// true
 }

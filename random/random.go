@@ -13,7 +13,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/techidea8/codectl/infra/mathkit"
+	mathutil "github.com/turingdance/infra/mathkit"
 )
 
 const (

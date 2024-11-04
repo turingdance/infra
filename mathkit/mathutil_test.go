@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/techidea8/codectl/infra/internal"
+	"github.com/turingdance/infra/internal"
 )
 
 func TestExponent(t *testing.T) {

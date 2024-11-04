@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/techidea8/codectl/infra/internal"
+	"github.com/turingdance/infra/internal"
 )
 
 // Promise represents the eventual completion (or failure) of an asynchronous operation and its resulting value.

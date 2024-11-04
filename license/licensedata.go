@@ -6,8 +6,8 @@ import (
 	"io"
 	"time"
 
-	"github.com/techidea8/codectl/infra/hardware"
-	"github.com/techidea8/codectl/infra/stringx"
+	"github.com/turingdance/infra/hardware"
+	"github.com/turingdance/infra/stringx"
 )
 
 // licence 数据结构

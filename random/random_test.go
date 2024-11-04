@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/techidea8/codectl/infra/internal"
+	"github.com/turingdance/infra/internal"
 )
 
 func TestRandString(t *testing.T) {

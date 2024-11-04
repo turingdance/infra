@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"github.com/techidea8/codectl/infra/restkit"
-	"github.com/techidea8/codectl/infra/wraper"
+	"github.com/turingdance/infra/restkit"
+	"github.com/turingdance/infra/wraper"
 )
 
 // CORS returns a Cross-Origin Resource Sharing (CORS) middleware.

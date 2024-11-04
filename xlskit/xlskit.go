@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/techidea8/codectl/infra/slicekit"
+	"github.com/turingdance/infra/slicekit"
 	"github.com/xuri/excelize/v2"
 )
 

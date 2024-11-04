@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/techidea8/codectl/infra/wraper"
+	"github.com/turingdance/infra/wraper"
 )
 
 func Test01(t *testing.T) {

@@ -1,7 +1,7 @@
 package restkit
 
 import (
-	"github.com/techidea8/codectl/infra/wraper"
+	"github.com/turingdance/infra/wraper"
 )
 
 type (

@@ -1,7 +1,7 @@
 package dbkit
 
 import (
-	"github.com/techidea8/codectl/infra/cond"
+	"github.com/turingdance/infra/cond"
 	"gorm.io/gorm"
 )
 

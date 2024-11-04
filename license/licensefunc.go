@@ -5,8 +5,8 @@ import (
 	"errors"
 	"os"
 
-	"github.com/techidea8/codectl/infra/cryptor"
-	"github.com/techidea8/codectl/infra/slicekit"
+	"github.com/turingdance/infra/cryptor"
+	"github.com/turingdance/infra/slicekit"
 )
 
 // 一个随机的key,不能随机

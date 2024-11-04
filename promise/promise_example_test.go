@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/techidea8/codectl/infra/internal"
+	"github.com/turingdance/infra/internal"
 )
 
 func ExampleNew() {

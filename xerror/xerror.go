@@ -10,7 +10,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/techidea8/codectl/infra/random"
+	"github.com/turingdance/infra/random"
 )
 
 // XError is to handle error related information.

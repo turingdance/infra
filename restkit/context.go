@@ -5,8 +5,8 @@ import (
 	"net/url"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/techidea8/codectl/infra/restkit/validatekit"
-	"github.com/techidea8/codectl/infra/wraper"
+	"github.com/turingdance/infra/restkit/validatekit"
+	"github.com/turingdance/infra/wraper"
 )
 
 type (

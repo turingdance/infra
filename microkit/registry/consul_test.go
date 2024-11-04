@@ -7,7 +7,7 @@ import (
 
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/labstack/echo"
-	"github.com/techidea8/codectl/infra/microkit/registry"
+	"github.com/turingdance/infra/microkit/registry"
 )
 
 func Test01(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/techidea8/codectl/infra/microkit/configure"
+	"github.com/turingdance/infra/microkit/configure"
 )
 
 func Test02(t *testing.T) {

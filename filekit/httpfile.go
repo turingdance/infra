@@ -13,7 +13,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/techidea8/codectl/infra/stringx"
+	"github.com/turingdance/infra/stringx"
 )
 
 type StorageStrategy string

@@ -4,7 +4,7 @@ import (
 	_ "embed"
 
 	"github.com/getlantern/systray"
-	"github.com/techidea8/codectl/infra/logger"
+	"github.com/turingdance/infra/logger"
 )
 
 //go:embed tray.ico

@@ -3,7 +3,7 @@ package cryptor
 import (
 	"testing"
 
-	"github.com/techidea8/codectl/infra/internal"
+	"github.com/turingdance/infra/internal"
 )
 
 func TestMd5String(t *testing.T) {

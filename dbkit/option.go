@@ -4,7 +4,7 @@ import (
 	"io"
 	"os"
 
-	ctllogger "github.com/techidea8/codectl/infra/logger"
+	ctllogger "github.com/turingdance/infra/logger"
 	"gorm.io/gorm/logger"
 )
 

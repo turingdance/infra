@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/techidea8/codectl/infra/internal"
+	"github.com/turingdance/infra/internal"
 )
 
 func TestTryUnwrap(t *testing.T) {
@@ -77,7 +77,7 @@ func TestXError_StackTrace(t *testing.T) {
 	stacks := err.Stacks()
 
 	assert.Equal(3, len(stacks))
-	assert.Equal("github.com/techidea8/codectl/infra/xerror.TestXError_StackTrace", stacks[0].Func)
+	assert.Equal("github.com/turingdance/infra/xerror.TestXError_StackTrace", stacks[0].Func)
 	assert.Equal(75, stacks[0].Line)
 	assert.Equal(true, strings.Contains(stacks[0].File, "xerror_test.go"))
 }

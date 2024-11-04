@@ -5,7 +5,7 @@ import (
 
 	"github.com/super-l/machine-code/machine"
 	"github.com/super-l/machine-code/machine/types"
-	"github.com/techidea8/codectl/infra/cryptor"
+	"github.com/turingdance/infra/cryptor"
 )
 
 // 硬件相关信息

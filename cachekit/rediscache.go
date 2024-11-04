@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/techidea8/codectl/infra/rediskit"
+	"github.com/turingdance/infra/rediskit"
 )
 
 type rediscache struct {

@@ -6,9 +6,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/techidea8/codectl/infra/logger"
-	"github.com/techidea8/codectl/infra/slicekit"
-	"github.com/techidea8/codectl/infra/wraper"
+	"github.com/turingdance/infra/logger"
+	"github.com/turingdance/infra/slicekit"
+	"github.com/turingdance/infra/wraper"
 )
 
 type HandlerFuncX struct {
