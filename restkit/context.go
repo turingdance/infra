@@ -29,20 +29,29 @@ type (
 		Bind(ptr interface{}) error
 		// Validate validates provided `i`. It is usually called after `Context#Bind()`.
 		Validate(ptr interface{}) error
+		// 校验
+		RegisterValidation(tag string, fn validator.Func, callValidationEvenIfNull ...bool)
 	}
 	context struct {
-		request *http.Request
-		writer  http.ResponseWriter
-		params  *url.Values
+		request  *http.Request
+		writer   http.ResponseWriter
+		params   *url.Values
+		validate *validator.Validate
 	}
 )
 
 func NewContext(w http.ResponseWriter, r *http.Request) *context {
 	return &context{
-		writer:  w,
-		request: r,
-		params:  &url.Values{},
+		writer:   w,
+		request:  r,
+		params:   &url.Values{},
+		validate: validator.New(),
 	}
+}
+
+// 获得request
+func (c *context) RegisterValidation(tag string, fn validator.Func, callValidationEvenIfNull ...bool) {
+	c.validate.RegisterValidation(tag, fn, callValidationEvenIfNull...)
 }
 
 // 获得request
@@ -84,14 +93,10 @@ func (c *context) Bind(ptrdata any) error {
 	return c.Validate(ptrdata)
 }
 
-// 格式校验
-var validate *validator.Validate = validator.New()
-
-func init() {
-	validate.RegisterValidation("passwordscore", validatekit.PasswordScore)
-}
-
-func (c *context) Validate(ptrstru any) error {
-	err := validate.Struct(ptrstru)
-	return validatekit.ProcessError(ptrstru, err) //处理错误信息
+func (c *context) Validate(ptrstru any) (err error) {
+	if c.validate != nil {
+		err = c.validate.Struct(ptrstru)
+		err = validatekit.ProcessError(ptrstru, err) //处理错误信息
+	}
+	return
 }
