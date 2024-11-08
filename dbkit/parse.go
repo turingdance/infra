@@ -34,14 +34,11 @@ func guessdbtype(dsn string) DBTYPE {
 	dbtype := SQLite
 	if strings.Contains(dsn, ".db") {
 		dbtype = SQLite
-	}
-	if strings.Contains(dsn, ":") {
+	} else if strings.Contains(dsn, ":") {
 		dbtype = MySQL
-	}
-	if strings.Contains(dsn, "sql") {
+	} else if strings.Contains(dsn, "sql") {
 		dbtype = SqlServer
-	}
-	if strings.Contains(dsn, " ") {
+	} else if strings.Contains(dsn, " ") {
 		dbtype = PostgreSQL
 	}
 	return dbtype
