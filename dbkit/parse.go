@@ -3,6 +3,7 @@ package dbkit
 import (
 	"net/url"
 	"regexp"
+	"strings"
 )
 
 type DbConfig struct {
@@ -27,4 +28,21 @@ func ParseMysql(dsn string) *DbConfig {
 	cfg.Dbname = strs[5]
 	cfg.Params, _ = url.ParseQuery(strs[6])
 	return cfg
+}
+
+func guessdbtype(dsn string) DBTYPE {
+	dbtype := SQLite
+	if strings.Contains(dsn, ".db") {
+		dbtype = SQLite
+	}
+	if strings.Contains(dsn, ":") {
+		dbtype = MySQL
+	}
+	if strings.Contains(dsn, "sql") {
+		dbtype = SqlServer
+	}
+	if strings.Contains(dsn, " ") {
+		dbtype = PostgreSQL
+	}
+	return dbtype
 }

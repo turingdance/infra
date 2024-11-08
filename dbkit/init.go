@@ -15,16 +15,6 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-func GussDbtype(dsn string) DBTYPE {
-	dbtype := SQLite
-	if strings.Contains(dsn, ":") {
-		dbtype = MySQL
-	}
-	if strings.Contains(dsn, "host=") {
-		dbtype = PostgreSQL
-	}
-	return dbtype
-}
 func TOString(l logger.LogLevel) string {
 	if l == logger.Error {
 		return "error"
@@ -61,10 +51,18 @@ func TOGormLogLevel(level string) (r logger.LogLevel) {
 }
 
 // gorm.Dialector
-func OpenDb(dst DBTYPE, dsn string, opts ...Option) (db *gorm.DB, err error) {
+func OpenDb(linkstr string, opts ...Option) (db *gorm.DB, err error) {
 	var dialector gorm.Dialector
-	if dst == "" {
-		dst = GussDbtype(dsn)
+	arr := strings.Split(linkstr, "://")
+	dst := DBTYPE(arr[0])
+	dsn := linkstr
+	if len(arr) < 2 {
+		//err = errors.New("请配置数据库类型")
+		dst = guessdbtype(linkstr)
+		dsn = linkstr
+	} else {
+		dst = DBTYPE(arr[0])
+		dsn = arr[1]
 	}
 	if dst == MySQL {
 		dialector = mysql.Open(dsn)

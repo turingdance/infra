@@ -10,6 +10,7 @@ import (
 type Response struct {
 	Total   any           `json:"total,omitempty" xml:"total,omitempty"`
 	Data    any           `json:"data,omitempty" xml:"data,omitempty"`
+	Rows    any           `json:"rows,omitempty" xml:"rows,omitempty"`
 	Code    int           `json:"code" xml:"code"`
 	Msg     string        `json:"msg,omitempty" xml:"msg,omitempty"`
 	Blob    BlobDef       `json:"-" xml:"-"`
@@ -61,6 +62,15 @@ func OkData(input interface{}) *Response {
 	return &Response{
 		Data:   input,
 		Code:   200,
+		Mime:   MineJson,
+		Status: http.StatusOK,
+	}
+}
+func OkRows(input any, total any) *Response {
+	return &Response{
+		Rows:   input,
+		Code:   200,
+		Total:  total,
 		Mime:   MineJson,
 		Status: http.StatusOK,
 	}
