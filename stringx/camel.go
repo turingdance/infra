@@ -16,3 +16,23 @@ func CamelUcFirst(input string) string {
 		return strings.ToUpper(s[1:])
 	})
 }
+
+// 下划线转驼峰命名
+func UnderlineToCamelCase(input string) string {
+	strArr := strings.Split(input, "_")
+	result := make([]string, 0)
+	for _, v := range strArr {
+		result = append(result, Ucfirst(v))
+	}
+	return Lcfirst(strings.Join(result, ""))
+}
+
+// 下划线转驼峰命名
+func UnderlineToUperCamelCase(input string) string {
+	strArr := strings.Split(input, "_")
+	result := make([]string, 0)
+	for _, v := range strArr {
+		result = append(result, Ucfirst(v))
+	}
+	return Ucfirst(strings.Join(result, ""))
+}

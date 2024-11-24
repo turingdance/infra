@@ -15,11 +15,12 @@ type (
 )
 
 type Route struct {
-	Package     string
-	Module      string
-	Func        string
-	Path        string
-	Method      []string
-	Comment     string
-	HandlerFunc http.HandlerFunc
+	Package     string           //包名称
+	Module      string           //模块抹茶
+	Func        string           //函数名称
+	Path        string           //路径
+	Method      []string         //方法
+	Comment     string           // 配置
+	App         string           //所属应用
+	HandlerFunc http.HandlerFunc //对应处理器
 }

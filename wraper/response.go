@@ -130,6 +130,15 @@ func (w *Response) WithMsg(msg string) *Response {
 }
 
 // 获得msg
+func (w *Response) Error(err error) *Response {
+	if err != nil {
+		w.Code = 404
+		w.Msg = err.Error()
+	}
+	return w
+}
+
+// 获得msg
 func (Response *Response) EncodeJSON(writer http.ResponseWriter) (err error) {
 
 	return json.NewEncoder(writer).Encode(writer)
