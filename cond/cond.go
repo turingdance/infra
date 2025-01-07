@@ -199,6 +199,14 @@ func NewListAllWraper() *CondWraper {
 		KeyFunc: SnakeCase,
 	}
 }
+func NoLimitWraper() *CondWraper {
+	return &CondWraper{
+		Conds:   make([]Cond, 0),
+		Order:   Order{},
+		Pager:   Pager{Pagefrom: 0, Pagesize: -1},
+		KeyFunc: SnakeCase,
+	}
+}
 func NewCondWrapper() *CondWraper {
 	return &CondWraper{
 		Conds:   make([]Cond, 0),
@@ -224,6 +232,11 @@ func (c *CondWraper) AddOneCond(field string, op OPTYPE, value any) *CondWraper 
 }
 func (c *CondWraper) SetPager(pager Pager) *CondWraper {
 	c.Pager = pager
+	return c
+}
+
+func (c *CondWraper) PagesizeUnlimit() *CondWraper {
+	c.Pager = Pager{Pagefrom: 0, Pagesize: -1}
 	return c
 }
 

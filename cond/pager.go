@@ -5,6 +5,12 @@ type Pager struct {
 	Pagesize int `json:"pagesize"`
 }
 
+func NoLimitPager() Pager {
+	return Pager{
+		Pagefrom: 0,
+		Pagesize: -1,
+	}
+}
 func (p Pager) Limit() int {
 	return p.Pagesize
 }

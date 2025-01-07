@@ -19,7 +19,9 @@ func Search[T any](dbengin *gorm.DB, model *T, wraper *cond.CondWraper) (result 
 	if err != nil {
 		return nil, 0, err
 	}
-	db = db.Limit(wraper.Pager.Limit()).Offset(wraper.Pager.Offset())
+	if wraper.Pager.Limit() > 0 {
+		db = db.Limit(wraper.Pager.Limit()).Offset(wraper.Pager.Offset())
+	}
 	if order, err := wraper.Order.Build(); err == nil {
 		db = db.Order(order)
 	}
