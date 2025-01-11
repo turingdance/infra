@@ -6,7 +6,7 @@ import (
 )
 
 // 搜索
-func Search[T any](dbengin *gorm.DB, model *T, wraper *cond.CondWraper) (result []T, total int64, err error) {
+func Search[T any](dbengin *gorm.DB, model *T, wraper *cond.CondWraper, fields ...string) (result []T, total int64, err error) {
 	db := dbengin.Model(model)
 	for _, v := range wraper.Conds {
 		sql, arg, err := v.Build()
@@ -26,6 +26,9 @@ func Search[T any](dbengin *gorm.DB, model *T, wraper *cond.CondWraper) (result 
 		db = db.Order(order)
 	}
 	result = make([]T, 0)
+	if len(fields) > 0 {
+		db = db.Select(fields)
+	}
 	err = db.Find(&result).Error
 	return result, total, err
 }
