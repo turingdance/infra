@@ -44,6 +44,7 @@ type OssConf struct {
 	AccessKeyId     string
 	AccessKeySecret string
 	Host            string
+	Endpoint        string
 	CallbackUrl     string
 	UploadDir       string
 	ExpireTime      int64

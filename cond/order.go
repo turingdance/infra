@@ -17,6 +17,6 @@ func (o Order) Build() (string, error) {
 	} else if o.Method == "desc" {
 		return o.Desc(), nil
 	} else {
-		return "", nil
+		return o.Field, nil
 	}
 }

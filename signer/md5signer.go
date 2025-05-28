@@ -45,6 +45,9 @@ func (s *Md5Signer) Method() SignerMethod {
 
 // VerifySignature 校验签名
 func (s *Md5Signer) VerifySignature(params map[string]string, signature string, expireAt int64) (bool, error) {
+	if time.Now().Unix() > expireAt {
+		return false, errors.New("签名已过期")
+	}
 	var keys []string
 	for k := range params {
 		keys = append(keys, k)
@@ -64,8 +67,6 @@ func (s *Md5Signer) VerifySignature(params map[string]string, signature string, 
 	if expectedSignature != signature {
 		return false, errors.New("签名不正确")
 	}
-	if time.Now().Unix() > expireAt {
-		return false, errors.New("签名已过期")
-	}
+
 	return true, nil
 }

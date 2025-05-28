@@ -28,24 +28,28 @@ func SetLogLevel(level ctllogger.LogLevel) Option {
 	}
 }
 
+// 设置最大可用连接数
 func SetMaxOpenConns(num int) Option {
 	return func(dc *DbContext) {
 		dc.MaxOpenConns = num
 	}
 }
 
+// 设置最大空闲连接数
 func SetMaxIdleConns(num int) Option {
 	return func(dc *DbContext) {
 		dc.MaxIdleConns = num
 	}
 }
 
+// 设置最大保持时间
 func SetConnMaxLifetime(d time.Duration) Option {
 	return func(dc *DbContext) {
 		dc.ConnMaxLifetime = d
 	}
 }
 
+// 设置最大空闲时间
 func SetConnMaxIdleTime(d time.Duration) Option {
 	return func(dc *DbContext) {
 		dc.ConnMaxIdleTime = d
