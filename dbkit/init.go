@@ -111,5 +111,11 @@ func OpenDb(linkstr string, opts ...Option) (db *gorm.DB, err error) {
 	if err != nil {
 		return
 	}
+	// 设置 连接池
+	sqlDb, _ := db.DB()
+	sqlDb.SetMaxIdleConns(ctx.MaxIdleConns)
+	sqlDb.SetMaxOpenConns(ctx.MaxOpenConns)
+	sqlDb.SetConnMaxIdleTime(ctx.ConnMaxIdleTime)
+	sqlDb.SetConnMaxLifetime(ctx.ConnMaxLifetime)
 	return db, err
 }

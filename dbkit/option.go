@@ -3,6 +3,7 @@ package dbkit
 import (
 	"io"
 	"os"
+	"time"
 
 	ctllogger "github.com/turingdance/infra/logger"
 	"gorm.io/gorm/logger"
@@ -24,6 +25,30 @@ func SetLogLevel(level ctllogger.LogLevel) Option {
 	return func(ctx *DbContext) {
 		//fmt.Println("SetLogLevel(level int32),%s ", level, TOString(logger.LogLevel(level)))
 		ctx.LogLevel = TOGormLogLevel(level)
+	}
+}
+
+func SetMaxOpenConns(num int) Option {
+	return func(dc *DbContext) {
+		dc.MaxOpenConns = num
+	}
+}
+
+func SetMaxIdleConns(num int) Option {
+	return func(dc *DbContext) {
+		dc.MaxIdleConns = num
+	}
+}
+
+func SetConnMaxLifetime(d time.Duration) Option {
+	return func(dc *DbContext) {
+		dc.ConnMaxLifetime = d
+	}
+}
+
+func SetConnMaxIdleTime(d time.Duration) Option {
+	return func(dc *DbContext) {
+		dc.ConnMaxIdleTime = d
 	}
 }
 
@@ -77,6 +102,10 @@ type DbContext struct {
 	SingularTable             bool
 	ModuleMigrates            []interface{}
 	Debug                     bool
+	MaxIdleConns              int           // 最大空闲连接数
+	MaxOpenConns              int           // 最大打开连接数
+	ConnMaxLifetime           time.Duration // 连接最大生命周期
+	ConnMaxIdleTime           time.Duration // 连接最大空闲时间
 }
 
 func NewDbContext() *DbContext {
@@ -89,5 +118,9 @@ func NewDbContext() *DbContext {
 		SingularTable:             true,
 		ModuleMigrates:            make([]interface{}, 0),
 		Debug:                     false,
+		MaxIdleConns:              2,
+		MaxOpenConns:              10,
+		ConnMaxLifetime:           time.Hour * 1,
+		ConnMaxIdleTime:           time.Second * 10,
 	}
 }
