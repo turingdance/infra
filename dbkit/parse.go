@@ -19,20 +19,7 @@ type DbConfig struct {
 	Params      url.Values
 	FilePath    string // SQLite文件路径
 	OriginalDSN string // 原始DSN字符串
-}
-
-func guessdbtype(dsn string) DBTYPE {
-	dbtype := SQLite
-	if strings.Contains(dsn, ".db") {
-		dbtype = SQLite
-	} else if strings.Contains(dsn, ":") {
-		dbtype = MySQL
-	} else if strings.Contains(dsn, "sql") {
-		dbtype = SqlServer
-	} else if strings.Contains(dsn, " ") {
-		dbtype = PostgreSQL
-	}
-	return dbtype
+	StandardDSN string
 }
 
 // Parse 解析各种数据库类型的 DSN 字符串
@@ -62,14 +49,15 @@ func Parse(dsn string) (*DbConfig, error) {
 
 // isMySQLDSN 检测是否为 MySQL DSN
 func isMySQLDSN(dsn string) bool {
-	// 检查标准格式 user:pass@protocol(addr)/dbname
-	if strings.Contains(dsn, "@") && strings.Contains(dsn, "/") {
-		return true
-	}
 	// 检查 URL 格式 mysql://user:pass@host/dbname
 	if strings.HasPrefix(dsn, "mysql://") {
 		return true
 	}
+	// 检查标准格式 user:pass@protocol(addr)/dbname
+	if strings.Contains(dsn, "@") && strings.Contains(dsn, ")") {
+		return true
+	}
+
 	return false
 }
 
@@ -310,6 +298,7 @@ func ParseMysql(dsn string) (*DbConfig, error) {
 		OriginalDSN: dsn,
 		DbType:      MySQL,
 		Params:      make(url.Values),
+		StandardDSN: dsn,
 	}
 
 	// 处理空 DSN
@@ -319,10 +308,18 @@ func ParseMysql(dsn string) (*DbConfig, error) {
 
 	// 检查是否包含协议前缀 (如 mysql://)
 	if strings.Contains(dsn, "://") {
-		return parseMysqlURL(dsn, config)
+		//mysql：// [标准协议]
+		if strings.Contains(dsn, ")") {
+			arr := strings.Split(dsn, "://")
+			config.StandardDSN = arr[1]
+			return parseMysqlStandard(config.StandardDSN, config)
+		} else {
+			return parseMysqlURL(dsn, config)
+		}
 	}
 
 	// 标准格式: user:password@protocol(address)/dbname?params
+	// 支持自定義的
 	return parseMysqlStandard(dsn, config)
 }
 

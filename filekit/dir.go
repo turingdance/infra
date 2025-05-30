@@ -1,7 +1,10 @@
 package filekit
 
 import (
+	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -66,4 +69,109 @@ func CopyInner(srcPrefix, src string, dstPrefix, dst string) (count int, err err
 		}
 	}
 	return count, nil
+}
+
+// CopyDir 递归复制目录及其内容
+func CopyDir(src, dst string) error {
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	if !srcInfo.IsDir() {
+		return fmt.Errorf("%s 不是目录", src)
+	}
+
+	// 创建目标目录
+	err = os.MkdirAll(dst, srcInfo.Mode())
+	if err != nil {
+		return err
+	}
+
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		dstPath := filepath.Join(dst, entry.Name())
+
+		if entry.IsDir() {
+			if err := CopyDir(srcPath, dstPath); err != nil {
+				return err
+			}
+		} else {
+			// 处理文件和符号链接
+			if entry.Type()&os.ModeSymlink != 0 {
+				if err := copySymlink(srcPath, dstPath); err != nil {
+					return err
+				}
+			} else {
+				if err := CopyFile(srcPath, dstPath); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+// CopyFile 复制单个文件
+func CopyFile(src, dst string) error {
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	srcInfo, err := srcFile.Stat()
+	if err != nil {
+		return err
+	}
+
+	// 如果目标文件已存在，检查是否需要覆盖
+	if _, err := os.Stat(dst); err == nil {
+		dstInfo, err := os.Stat(dst)
+		if err != nil {
+			return err
+		}
+
+		// 如果源文件和目标文件相同，跳过复制
+		if os.SameFile(srcInfo, dstInfo) {
+			return nil
+		}
+	}
+
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+
+	// 复制文件内容
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return err
+	}
+
+	// 复制文件权限
+	if err = os.Chmod(dst, srcInfo.Mode()); err != nil {
+		return err
+	}
+
+	// 尝试复制文件时间
+
+	return nil
+}
+
+// copySymlink 复制符号链接
+func copySymlink(src, dst string) error {
+	target, err := os.Readlink(src)
+	if err != nil {
+		return err
+	}
+
+	return os.Symlink(target, dst)
 }

@@ -59,3 +59,25 @@ func TestToMap(t *testing.T) {
 		})
 	}
 }
+
+func TestToMapList(t *testing.T) {
+	type User struct {
+		Name  string `json:"name"`
+		Age   int    `json:"age,omitempty"`
+		Email string `json:"email_address"`
+	}
+
+	users := []User{
+		{Name: "Alice", Age: 30, Email: "alice@example.com"},
+		{Name: "Bob", Age: 0, Email: "bob@example.com"},
+	}
+
+	maps := ObjListToMapList(users)
+	for i, v := range maps {
+		t.Run(v["name"].(string), func(t *testing.T) {
+			if v["name"] != users[i].Name {
+				t.Error(v)
+			}
+		})
+	}
+}

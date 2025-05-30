@@ -2,14 +2,43 @@ package dbkit
 
 import "testing"
 
-var dsn1 = "user:password@tcp(localhost:5555)/dbname?tls=skip-verify&autocommit=true"
-var dsn2 = "root:pw@unix(/tmp/mysql.sock)/myDatabase?loc=Local"
-var dsn3 = "user@unix(/path/to/socket)/dbname"
-var dsn4 = "/dbname"
+type DATA struct {
+	Dsn    string
+	DBTYPE DBTYPE
+}
 
 func TestDSN(t *testing.T) {
-	//ParseMysql(dsn4)
-	ParseMysql(dsn1)
-	ParseMysql(dsn2)
-	ParseMysql(dsn3)
+
+	datas := []DATA{
+		{
+			Dsn:    "user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local",
+			DBTYPE: MySQL,
+		},
+		{
+			Dsn:    "mysql://user:pass@tcp(127.0.0.1:3306)/dbname?charset=utf8mb4&parseTime=True&loc=Local",
+			DBTYPE: MySQL,
+		},
+		{
+			Dsn:    "sqlserver://user:pass@localhost:1433?database=dbname",
+			DBTYPE: SqlServer,
+		},
+		{
+			Dsn:    "/mnt/data/test.db",
+			DBTYPE: SQLite,
+		},
+		{
+			Dsn:    "postgres://user:pass@localhost:5432/dbname?sslmode=disable",
+			DBTYPE: PostgreSQL,
+		},
+	}
+	for _, v := range datas {
+		info, err := Parse(v.Dsn)
+		if err != nil {
+			t.Errorf("%s,%s", v.Dsn, err.Error())
+		}
+		if info.DbType != v.DBTYPE {
+			t.Errorf("%s,expected %s while get %s", v.Dsn, v.DBTYPE, info.DbType)
+		}
+	}
+
 }

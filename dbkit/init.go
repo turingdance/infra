@@ -61,7 +61,7 @@ func OpenDb(linkstr string, opts ...Option) (db *gorm.DB, err error) {
 	dsn := linkstr
 	switch dbtype {
 	case MySQL, Tidb:
-		dialector = mysql.Open(dsn)
+		dialector = mysql.Open(dbinfo.StandardDSN)
 	case SQLite:
 		dialector = sqlite.Open(dsn)
 	case SqlServer:
