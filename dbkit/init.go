@@ -53,28 +53,23 @@ func TOGormLogLevel(level string) (r logger.LogLevel) {
 // gorm.Dialector
 func OpenDb(linkstr string, opts ...Option) (db *gorm.DB, err error) {
 	var dialector gorm.Dialector
-	arr := strings.Split(linkstr, "://")
-	dst := DBTYPE(arr[0])
-	dsn := linkstr
-	if len(arr) < 2 {
-		//err = errors.New("请配置数据库类型")
-		dst = guessdbtype(linkstr)
-		dsn = linkstr
-	} else {
-		dst = DBTYPE(arr[0])
-		dsn = arr[1]
+	dbinfo, err := Parse(linkstr)
+	if err != nil {
+		return nil, err
 	}
-	if dst == MySQL {
+	dbtype := dbinfo.DbType
+	dsn := linkstr
+	switch dbtype {
+	case MySQL, Tidb:
 		dialector = mysql.Open(dsn)
-	} else if dst == PostgreSQL {
-		dialector = postgres.Open(dsn)
-	} else if dst == SQLite {
+	case SQLite:
 		dialector = sqlite.Open(dsn)
-	} else if dst == SqlServer {
+	case SqlServer:
 		dialector = sqlserver.Open(dsn)
-	} else {
-		err = fmt.Errorf("not suport %s", dst)
-		return
+	case PostgreSQL:
+		dialector = postgres.Open(dsn)
+	default:
+
 	}
 	ctx := NewDbContext()
 	for _, opt := range opts {
