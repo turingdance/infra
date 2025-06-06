@@ -1,8 +1,6 @@
 module github.com/turingdance/infra
 
-go 1.23.0
-
-toolchain go1.23.2
+go 1.20
 
 require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.63.45
