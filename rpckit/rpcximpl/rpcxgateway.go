@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/rpcxio/libkv/store"
 	rpcxredisclient "github.com/rpcxio/rpcx-redis/client"
 	"github.com/smallnest/rpcx/client"
@@ -14,12 +15,49 @@ import (
 	"github.com/turingdance/infra/wraper"
 )
 
+type Route struct {
+	patern     string
+	hander     http.Handler
+	method     []string
+	middleware []mux.MiddlewareFunc
+}
+
+func NewRoute(pater string, hander http.Handler) *Route {
+	return &Route{
+		patern: pater,
+		hander: hander,
+		method: []string{
+			"post",
+		},
+		middleware: []mux.MiddlewareFunc{},
+	}
+}
+
+func (r *Route) Patern(p string) *Route {
+	r.patern = p
+	return r
+}
+func (r *Route) Handle(h http.Handler) *Route {
+	r.hander = h
+	return r
+}
+func (r *Route) Method(m ...string) *Route {
+	r.method = append(r.method, m...)
+	return r
+}
+func (r *Route) Middleware(m ...mux.MiddlewareFunc) *Route {
+	r.middleware = append(r.middleware, m...)
+	return r
+}
+
 type Rpcxapp struct {
 	host     string
 	port     int
 	domain   string
 	provider Provider
 	server   *http.Server
+	rpcroute *Route
+	routes   []*Route
 }
 
 func NewRpcxapp(domain string) *Rpcxapp {
@@ -27,6 +65,12 @@ func NewRpcxapp(domain string) *Rpcxapp {
 		host:   "",
 		port:   8089,
 		domain: domain,
+		rpcroute: &Route{
+			patern:     "/",
+			method:     []string{"post"},
+			middleware: []mux.MiddlewareFunc{},
+		},
+		routes: make([]*Route, 0),
 	}
 	return r
 }
@@ -38,8 +82,29 @@ func (s *Rpcxapp) Host(host string) *Rpcxapp {
 	s.host = host
 	return s
 }
+func (s *Rpcxapp) AddRoute(route ...*Route) *Rpcxapp {
+	s.routes = append(s.routes, route...)
+	return s
+}
+func (s *Rpcxapp) Router(route *Route) *Rpcxapp {
+	s.routes = append(s.routes, route)
+	return s
+}
 func (s *Rpcxapp) Provider(provider Provider) *Rpcxapp {
 	s.provider = provider
+	return s
+}
+func (s *Rpcxapp) Use(mdw ...mux.MiddlewareFunc) *Rpcxapp {
+	s.rpcroute.middleware = append(s.rpcroute.middleware, mdw...)
+	return s
+}
+
+func (s *Rpcxapp) Ctxpath(path string) *Rpcxapp {
+	s.rpcroute.patern = path
+	return s
+}
+func (s *Rpcxapp) Method(method ...string) *Rpcxapp {
+	s.rpcroute.method = method
 	return s
 }
 func (g *Rpcxapp) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -94,7 +159,18 @@ func (g *Rpcxapp) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 func (g *Rpcxapp) Start() {
 	addr := fmt.Sprintf("%s:%d", g.host, g.port)
-	g.server = &http.Server{Addr: addr, Handler: g}
+	g.rpcroute.hander = g
+	routes := append([]*Route{
+		g.rpcroute,
+	}, g.routes...)
+	router := mux.NewRouter()
+	// 处理全部
+	for _, v := range routes {
+		subrouter := router.NewRoute().Subrouter()
+		subrouter.Handle(v.patern, v.hander).Methods(v.method...)
+		subrouter.Use(v.middleware...)
+	}
+	g.server = &http.Server{Addr: addr, Handler: router}
 	println("run @", addr)
 	err := g.server.ListenAndServe()
 	if err != nil {
