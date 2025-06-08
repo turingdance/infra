@@ -31,3 +31,18 @@ func (s *RedisCtrl) Get(k string) (result interface{}, err error) {
 	err = cmd.Scan(&result)
 	return result, err
 }
+
+func (s *RedisCtrl) SAdd(k string, value ...interface{}) (err error) {
+	cmd := s.Rdb.SAdd(context.Background(), k, value...)
+	return cmd.Err()
+}
+
+func (s *RedisCtrl) Exists(key string) (exist bool, err error) {
+	exisstint, err := s.Rdb.Exists(context.Background(), key).Result()
+	return exisstint == 1, err
+}
+
+func (s *RedisCtrl) Expire(key string, d time.Duration) (err error) {
+	_, err = s.Rdb.Expire(context.Background(), key, d).Result()
+	return err
+}
