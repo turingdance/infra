@@ -10,6 +10,7 @@ import (
 	"github.com/rpcxio/libkv/store"
 	"github.com/smallnest/rpcx/server"
 	"github.com/smallnest/rpcx/serverplugin"
+	"github.com/turingdance/infra/logger"
 	"github.com/turingdance/infra/netkit"
 )
 
@@ -34,6 +35,7 @@ type Server struct {
 	domain    string
 	name      string
 	provider  Provider
+	logger    logger.ILogger
 	rpcserver *server.Server
 }
 type ServerOption func(*Server)
@@ -68,6 +70,7 @@ func NewServer(domain, name string, options ...ServerOption) *Server {
 		host:      "",
 		port:      8089,
 		name:      name,
+		logger:    logger.Std(),
 		domain:    domain,
 	}
 	for _, o := range options {
@@ -77,7 +80,10 @@ func NewServer(domain, name string, options ...ServerOption) *Server {
 }
 func (s *Server) Provider(provider Provider) *Server {
 	s.provider = provider
-	s.setupregister()
+	err := s.setupregister()
+	if err != nil {
+		s.logger.Error(err.Error())
+	}
 	return s
 }
 func (s *Server) Serve() *Server {
@@ -103,15 +109,23 @@ func (s *Server) RegisterFunctionName(servicePath string, name string, fn interf
 	s.rpcserver.RegisterFunctionName(servicePath, name, fn, metadata)
 	return s
 }
-
+func (s *Server) UseLogger(l logger.ILogger) *Server {
+	s.logger = l
+	return s
+}
 func (s *Server) setupregister() (err error) {
 	serviceAddress := fmt.Sprintf("%s@%s:%d", s.network, s.host, s.port)
+	s.logger.Infof("service [%s] run @ %s", s.name, serviceAddress)
 	metri := metrics.DefaultRegistry
 	domain := s.name
 	if s.provider.Type == MDNS {
 		r := serverplugin.NewMDNSRegisterPlugin(serviceAddress, s.port, metri, s.provider.UpdateInterval, domain)
 		err = r.Start()
-		s.rpcserver.Plugins.Add(r)
+		if err == nil {
+			s.rpcserver.Plugins.Add(r)
+		} else {
+			s.logger.Errorf("service register %s error %s", s.provider.Type, err.Error())
+		}
 	}
 	if s.provider.Type == REDIS {
 		var option *store.Config = &store.Config{}
@@ -131,7 +145,12 @@ func (s *Server) setupregister() (err error) {
 			UpdateInterval: s.provider.UpdateInterval,
 			Options:        option,
 		}
-		s.rpcserver.Plugins.Add(r)
+		err = r.Start()
+		if err == nil {
+			s.rpcserver.Plugins.Add(r)
+		} else {
+			s.logger.Errorf("service register %s error %s", s.provider.Type, err.Error())
+		}
 	}
 	return err
 }
