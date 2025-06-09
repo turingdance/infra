@@ -7,17 +7,17 @@ import (
 )
 
 type Params struct {
-	Query url.Values `json:"query"`
-	Body  []byte     `json:"body"`
+	Query url.Values `json:"query,omitempty"`
+	Body  []byte     `json:"body,omitempty"`
 }
 type Request struct {
 	Params
-	Method     string `json:"method"`
-	RequestURI string `json:"requestURI"`
+	Method     string `json:"method,omitempty"`
+	RequestURI string `json:"requestURI,omitempty"`
 }
 
-func NewRequest(req *http.Request) (r Request, err error) {
-	r = Request{
+func NewRequest(req *http.Request) (r *Request, err error) {
+	r = &Request{
 		Params: Params{
 			Query: req.URL.Query(),
 		},
@@ -36,16 +36,16 @@ func NewRequest(req *http.Request) (r Request, err error) {
 
 type ContentType string
 type Response struct {
-	Code        int         `json:"code"`
-	Msg         string      `json:"msg"`
-	Data        any         `json:"data"`
-	Rows        []any       `json:"rows"`
-	Total       int         `json:"total"`
-	ContentType ContentType `json:"contentType"`
+	Code        int         `json:"code,omitempty"`
+	Msg         string      `json:"msg,omitempty"`
+	Data        any         `json:"data,omitempty"`
+	Rows        []any       `json:"rows,omitempty"`
+	Total       int         `json:"total,omitempty"`
+	ContentType ContentType `json:"contentType,omitempty"`
 }
 
-func NewResponse() Response {
-	return Response{
+func NewResponse() *Response {
+	return &Response{
 		Rows: make([]any, 0),
 	}
 }
