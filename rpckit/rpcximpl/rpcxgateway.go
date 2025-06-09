@@ -125,6 +125,7 @@ func (g *Rpcxapp) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	arrs := strings.Split(strings.TrimLeft(req.URL.Path, "/"), "/")
 	g.logger.Debugf("[%s],[%s],%s", req.Method, req.RemoteAddr, req.RequestURI)
 	if len(arrs) < 3 {
+		g.logger.Errorf("[%s],[%s],%s,path is unavaliable", req.Method, req.RemoteAddr, req.RequestURI)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -145,7 +146,8 @@ func (g *Rpcxapp) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 		d, err := rpcxredisclient.NewRedisDiscovery((g.domain + "/" + appname), module, []string{g.provider.ServerURL}, option)
 		if err != nil {
-			wraper.Error(err).Encode(w)
+			g.logger.Errorf("[%s],[%s],%s,err=%s", req.Method, req.RemoteAddr, req.RequestURI, err.Error())
+			wraper.Error(errors.New("服务未找到")).Encode(w)
 			return
 		}
 		xclient = client.NewXClient(module, client.Failtry, client.RandomSelect, d, client.DefaultOption)
@@ -153,7 +155,8 @@ func (g *Rpcxapp) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if g.provider.Type == MDNS {
 		d, err := client.NewMDNSDiscovery(module, time.Second*5, time.Second*5, g.domain+"/"+appname)
 		if err != nil {
-			wraper.Error(err).Encode(w)
+			g.logger.Errorf("[%s],[%s],%s,err=%s", req.Method, req.RemoteAddr, req.RequestURI, err.Error())
+			wraper.Error(errors.New("服务未找到")).Encode(w)
 			return
 		}
 		xclient = client.NewXClient(module, client.Failtry, client.RandomSelect, d, client.DefaultOption)
@@ -162,13 +165,15 @@ func (g *Rpcxapp) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	request, err := rpckit.NewRequest(req)
 	if err != nil {
-		wraper.Error(err).Encode(w)
+		g.logger.Errorf("[%s],[%s],%s,err=%s", req.Method, req.RemoteAddr, req.RequestURI, err.Error())
+		wraper.Error(errors.New("参数解析有误")).Encode(w)
 		return
 	}
 	reply := rpckit.NewResponse()
 	err = xclient.Call(context.Background(), strings.ToUpper(action[:1])+action[1:], request, reply)
 	if err != nil {
-		wraper.Error(err).Encode(w)
+		g.logger.Errorf("[%s],[%s],%s,err=%s", req.Method, req.RemoteAddr, req.RequestURI, err.Error())
+		wraper.Error(errors.New("系统内部发生错误")).Encode(w)
 		return
 	} else {
 		wraper.OkData(reply).Encode(w)
@@ -189,15 +194,16 @@ func (g *Rpcxapp) Start() {
 		// subrouter.Handle(v.patern, v.hander).Methods(v.method...)
 		// subrouter.Use(v.middleware...)
 		router.PathPrefix(v.patern).Handler(v.hander).Methods(v.method...)
-		fmt.Println("register ", v.patern)
+		g.logger.Infof("register %s", v.patern)
 	}
 	g.server = &http.Server{Addr: addr, Handler: router}
-	println("run @", addr)
+	g.logger.Infof("micro run @ %s", addr)
 	err := g.server.ListenAndServe()
 	if err != nil {
-		println("catch error ", err.Error())
+		g.logger.Errorf("micro error ", err.Error())
 	}
 }
 func (g *Rpcxapp) Stop() {
 	g.server.Shutdown(context.Background())
+	g.logger.Infof("micro stop ")
 }
