@@ -1,6 +1,7 @@
 package rpcximpl
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -86,28 +87,46 @@ func (s *Server) Provider(provider Provider) *Server {
 	}
 	return s
 }
-func (s *Server) Serve() *Server {
-	s.rpcserver.Serve(s.network, fmt.Sprintf("%s:%d", s.host, s.port))
-	return s
+func (s *Server) Serve() (err error) {
+	err = s.rpcserver.Serve(s.network, fmt.Sprintf("%s:%d", s.host, s.port))
+	if err != nil {
+		s.logger.Errorf(err.Error())
+	}
+	return err
 }
 func (s *Server) Stop() {
-
+	err := s.rpcserver.Shutdown(context.Background())
+	if err != nil {
+		s.logger.Errorf(err.Error())
+	}
 }
-func (s *Server) Register(rcvr interface{}, metadata string) *Server {
-	s.rpcserver.Register(rcvr, metadata)
-	return s
+func (s *Server) Register(rcvr interface{}, metadata string) error {
+	err := s.rpcserver.Register(rcvr, metadata)
+	if err != nil {
+		s.logger.Errorf(err.Error())
+	}
+	return err
 }
-func (s *Server) RegisterName(name string, rcvr interface{}, metadata string) *Server {
-	s.rpcserver.RegisterName(name, rcvr, metadata)
-	return s
+func (s *Server) RegisterName(name string, rcvr interface{}, metadata string) error {
+	err := s.rpcserver.RegisterName(name, rcvr, metadata)
+	if err != nil {
+		s.logger.Errorf(err.Error())
+	}
+	return err
 }
-func (s *Server) RegisterFunction(servicePath string, fn interface{}, metadata string) *Server {
-	s.rpcserver.RegisterFunction(servicePath, fn, metadata)
-	return s
+func (s *Server) RegisterFunction(servicePath string, fn interface{}, metadata string) error {
+	err := s.rpcserver.RegisterFunction(servicePath, fn, metadata)
+	if err != nil {
+		s.logger.Errorf(err.Error())
+	}
+	return err
 }
-func (s *Server) RegisterFunctionName(servicePath string, name string, fn interface{}, metadata string) *Server {
-	s.rpcserver.RegisterFunctionName(servicePath, name, fn, metadata)
-	return s
+func (s *Server) RegisterFunctionName(servicePath string, name string, fn interface{}, metadata string) error {
+	err := s.rpcserver.RegisterFunctionName(servicePath, name, fn, metadata)
+	if err != nil {
+		s.logger.Errorf(err.Error())
+	}
+	return err
 }
 func (s *Server) UseLogger(l logger.ILogger) *Server {
 	s.logger = l
