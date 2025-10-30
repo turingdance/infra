@@ -139,42 +139,43 @@ func (w *Response) Error(err error) *Response {
 }
 
 // 获得msg
-func (Response *Response) EncodeJSON(writer http.ResponseWriter) (err error) {
+func (response *Response) EncodeJSON(writer http.ResponseWriter) (err error) {
 
-	return json.NewEncoder(writer).Encode(writer)
+	return json.NewEncoder(writer).Encode(response)
 
 }
 
 // 获得msg
-func (Response *Response) Encode(writer http.ResponseWriter) (err error) {
+func (response *Response) Encode(writer http.ResponseWriter) (err error) {
 
-	mime := Response.Mime
+	mime := response.Mime
 	err = nil
-	if mime == MineHtml || mime == MineText {
-		writer.WriteHeader(Response.Status)
-		_, err = fmt.Fprintf(writer, Response.HTML)
-	} else if mime == MineJson {
-		writer.WriteHeader(Response.Status)
-		err = json.NewEncoder(writer).Encode(Response)
-	} else if mime == MineXml {
-		writer.WriteHeader(Response.Status)
-		err = xml.NewEncoder(writer).Encode(Response)
-	} else if mime == MineBlob {
+	switch mime {
+	case MineHtml, MineText:
+		writer.WriteHeader(response.Status)
+		_, err = fmt.Fprintf(writer, response.HTML)
+	case MineJson:
+		writer.WriteHeader(response.Status)
+		err = json.NewEncoder(writer).Encode(response)
+	case MineXml:
+		writer.WriteHeader(response.Status)
+		err = xml.NewEncoder(writer).Encode(response)
+	case MineBlob:
 		contenttype := "application/octet-stream"
-		if Response.Blob.ContentType != "" {
-			contenttype = Response.Blob.ContentType
+		if response.Blob.ContentType != "" {
+			contenttype = response.Blob.ContentType
 		}
 		writer.Header().Set("Content-Type", contenttype)
-		if Response.Blob.Name != "" {
-			writer.Header().Set("Content-Disposition", "attachment; filename="+Response.Blob.Name) // 用来指定下载下来的文件名
+		if response.Blob.Name != "" {
+			writer.Header().Set("Content-Disposition", "attachment; filename="+response.Blob.Name) // 用来指定下载下来的文件名
 		}
-		writer.WriteHeader(Response.Status)
-		filebytes := Response.Blob.File
+		writer.WriteHeader(response.Status)
+		filebytes := response.Blob.File
 		_, err = writer.Write(filebytes)
 
-	} else {
-		writer.WriteHeader(Response.Status)
-		err = json.NewEncoder(writer).Encode(Response)
+	default:
+		writer.WriteHeader(response.Status)
+		err = json.NewEncoder(writer).Encode(response)
 	}
 	return err
 }
