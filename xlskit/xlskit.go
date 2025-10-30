@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/turingdance/infra/slicekit"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -42,11 +41,11 @@ func (s *xlskitctrl) Render(meta []Meta, dataInput []map[string]any) (buf *bytes
 		s.file.SetCellValue(s.sheetname, cellName, title)
 	}
 	for rowIndex, dataItem := range dataInput {
-		fields := slicekit.Keys(dataItem)
-		for colIndex, field := range fields {
-			cellName := fmt.Sprintf("%s%d", charfileds[colIndex], rowIndex+1)
+		for i, field := range fieldArr {
+			cellName := fmt.Sprintf("%s%d", charfileds[i], rowIndex+2)
 			value := dataItem[field]
 			s.file.SetCellValue(s.sheetname, cellName, value)
+			//fmt.Println(cellName, field, titleMap[field], value)
 		}
 	}
 	return s.file.WriteToBuffer()
