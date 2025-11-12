@@ -1,5 +1,10 @@
 package cond
 
+const (
+	Asc  = "asc"
+	Desc = "desc"
+)
+
 type Order struct {
 	Field  string `json:"field"`
 	Method string `json:"method"`

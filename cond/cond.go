@@ -195,7 +195,7 @@ func NewListAllWraper() *CondWraper {
 	return &CondWraper{
 		Conds:   make([]Cond, 0),
 		Order:   Order{},
-		Pager:   Pager{Pagefrom: 0, Pagesize: PAGESIZEMAX},
+		Pager:   Pager{Pagefrom: -1, Pagesize: -1},
 		KeyFunc: SnakeCase,
 	}
 }
@@ -203,18 +203,76 @@ func NoLimitWraper() *CondWraper {
 	return &CondWraper{
 		Conds:   make([]Cond, 0),
 		Order:   Order{},
-		Pager:   Pager{Pagefrom: 0, Pagesize: -1},
+		Pager:   Pager{Pagefrom: -1, Pagesize: -1},
 		KeyFunc: SnakeCase,
 	}
 }
-func NewCondWrapper() *CondWraper {
-	return &CondWraper{
+
+type CondOption func(*CondWraper)
+
+func NewCondWrapper(opts ...CondOption) *CondWraper {
+	r := &CondWraper{
 		Conds:   make([]Cond, 0),
 		Order:   Order{},
 		Pager:   Pager{Pagefrom: 0, Pagesize: 20},
 		KeyFunc: SnakeCase,
 	}
+	for _, v := range opts {
+		v(r)
+	}
+	return r
 }
+func Pagesize(num int) CondOption {
+	return func(cw *CondWraper) {
+		cw.Pager.Pagesize = num
+	}
+}
+func Pagefrom(num int) CondOption {
+	return func(cw *CondWraper) {
+		cw.Pager.Pagefrom = num
+	}
+}
+func Ascing(field string) CondOption {
+	return func(cw *CondWraper) {
+		cw.Order.Field = field
+		cw.Order.Method = Asc
+	}
+}
+func UseLowerCamel() CondOption {
+	return func(cw *CondWraper) {
+		cw.KeyFunc = LowerCamel
+	}
+}
+func UseUpperCamel() CondOption {
+	return func(cw *CondWraper) {
+		cw.KeyFunc = UpperCamel
+	}
+}
+
+func UseSnakeCase() CondOption {
+	return func(cw *CondWraper) {
+		cw.KeyFunc = SnakeCase
+	}
+}
+func ListAll() CondOption {
+	return func(cw *CondWraper) {
+		cw.Pager.Pagefrom = -1
+		cw.Pager.Pagesize = -1
+	}
+}
+func Descing(field string) CondOption {
+	return func(cw *CondWraper) {
+		cw.Order.Field = field
+		cw.Order.Method = Desc
+	}
+}
+
+func AddCond(conds ...Cond) CondOption {
+	return func(cw *CondWraper) {
+		cw.Conds = append(cw.Conds, conds...)
+	}
+}
+
 func (c *CondWraper) AddCond(conds ...Cond) *CondWraper {
 	for _, v := range conds {
 		if v.KeyFunc == "" {
