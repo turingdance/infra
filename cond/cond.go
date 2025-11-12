@@ -230,6 +230,54 @@ func (c *CondWraper) AddOneCond(field string, op OPTYPE, value any) *CondWraper 
 	})
 	return c
 }
+func (c *CondWraper) EQ(field string, value any) *CondWraper {
+	c.Conds = append(c.Conds, Cond{
+		Field: field, Op: OPEQ, Value: value,
+	})
+	return c
+}
+func (c *CondWraper) GT(field string, value any) *CondWraper {
+	c.Conds = append(c.Conds, Cond{
+		Field: field, Op: OPGT, Value: value,
+	})
+	return c
+}
+func (c *CondWraper) EGT(field string, value any) *CondWraper {
+	c.Conds = append(c.Conds, Cond{
+		Field: field, Op: OPEGT, Value: value,
+	})
+	return c
+}
+func (c *CondWraper) Like(field string, value any) *CondWraper {
+	c.Conds = append(c.Conds, Cond{
+		Field: field, Op: OPLIKE, Value: value,
+	})
+	return c
+}
+func (c *CondWraper) LT(field string, value any) *CondWraper {
+	c.Conds = append(c.Conds, Cond{
+		Field: field, Op: OPLT, Value: value,
+	})
+	return c
+}
+func (c *CondWraper) LET(field string, value any) *CondWraper {
+	c.Conds = append(c.Conds, Cond{
+		Field: field, Op: OPLET, Value: value,
+	})
+	return c
+}
+func (c *CondWraper) In(field string, value any) *CondWraper {
+	c.Conds = append(c.Conds, Cond{
+		Field: field, Op: OPIN, Value: value,
+	})
+	return c
+}
+func (c *CondWraper) Between(field string, value any) *CondWraper {
+	c.Conds = append(c.Conds, Cond{
+		Field: field, Op: OPBETWEEN, Value: value,
+	})
+	return c
+}
 func (c *CondWraper) SetPager(pager Pager) *CondWraper {
 	c.Pager = pager
 	return c
