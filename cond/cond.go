@@ -191,21 +191,29 @@ type CondWraper struct {
 	KeyFunc KeyFuncType `json:"keyfunc"`
 }
 
-func NewListAllWraper() *CondWraper {
-	return &CondWraper{
+func NewListAllWraper(opts ...CondOption) *CondWraper {
+	r := &CondWraper{
 		Conds:   make([]Cond, 0),
 		Order:   Order{},
 		Pager:   Pager{Pagefrom: -1, Pagesize: -1},
 		KeyFunc: SnakeCase,
 	}
+	for _, v := range opts {
+		v(r)
+	}
+	return r
 }
-func NoLimitWraper() *CondWraper {
-	return &CondWraper{
+func NoLimitWraper(opts ...CondOption) *CondWraper {
+	r := &CondWraper{
 		Conds:   make([]Cond, 0),
 		Order:   Order{},
 		Pager:   Pager{Pagefrom: -1, Pagesize: -1},
 		KeyFunc: SnakeCase,
 	}
+	for _, v := range opts {
+		v(r)
+	}
+	return r
 }
 
 type CondOption func(*CondWraper)
