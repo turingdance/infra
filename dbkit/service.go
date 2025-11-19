@@ -32,6 +32,29 @@ func (s *Service) Search(model interface{}, wraper *cond.CondWraper) (result int
 	return result, total, err
 }
 
+// 搜索
+func (s *Service) ListAll(model interface{}, wraper *cond.CondWraper) (result interface{}, total int64, err error) {
+	db := s.dbengin.Model(model)
+	for _, v := range wraper.Conds {
+		sql, arg, err := v.Build()
+		if err != nil {
+			return nil, 0, err
+		}
+		db = db.Where(sql, arg)
+	}
+	err = db.Count(&total).Error
+	if err != nil {
+		return nil, 0, err
+	}
+	db = db.Limit(-1).Offset(-1)
+	if order, err := wraper.Order.Build(); err == nil {
+		db = db.Order(order)
+	}
+	result = make([]interface{}, 0)
+	err = db.Find(&result).Error
+	return result, total, err
+}
+
 // 创建一条记录
 func (s *Service) Create(model interface{}) (r interface{}, err error) {
 	db := s.dbengin.Model(model)

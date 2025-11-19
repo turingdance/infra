@@ -191,30 +191,96 @@ type CondWraper struct {
 	KeyFunc KeyFuncType `json:"keyfunc"`
 }
 
-func NewListAllWraper() *CondWraper {
-	return &CondWraper{
+func NewListAllWraper(opts ...CondOption) *CondWraper {
+	r := &CondWraper{
 		Conds:   make([]Cond, 0),
 		Order:   Order{},
-		Pager:   Pager{Pagefrom: 0, Pagesize: PAGESIZEMAX},
+		Pager:   Pager{Pagefrom: -1, Pagesize: -1},
 		KeyFunc: SnakeCase,
 	}
+	for _, v := range opts {
+		v(r)
+	}
+	return r
 }
-func NoLimitWraper() *CondWraper {
-	return &CondWraper{
+func NoLimitWraper(opts ...CondOption) *CondWraper {
+	r := &CondWraper{
 		Conds:   make([]Cond, 0),
 		Order:   Order{},
-		Pager:   Pager{Pagefrom: 0, Pagesize: -1},
+		Pager:   Pager{Pagefrom: -1, Pagesize: -1},
 		KeyFunc: SnakeCase,
 	}
+	for _, v := range opts {
+		v(r)
+	}
+	return r
 }
-func NewCondWrapper() *CondWraper {
-	return &CondWraper{
+
+type CondOption func(*CondWraper)
+
+func NewCondWrapper(opts ...CondOption) *CondWraper {
+	r := &CondWraper{
 		Conds:   make([]Cond, 0),
 		Order:   Order{},
 		Pager:   Pager{Pagefrom: 0, Pagesize: 20},
 		KeyFunc: SnakeCase,
 	}
+	for _, v := range opts {
+		v(r)
+	}
+	return r
 }
+func Pagesize(num int) CondOption {
+	return func(cw *CondWraper) {
+		cw.Pager.Pagesize = num
+	}
+}
+func Pagefrom(num int) CondOption {
+	return func(cw *CondWraper) {
+		cw.Pager.Pagefrom = num
+	}
+}
+func Ascing(field string) CondOption {
+	return func(cw *CondWraper) {
+		cw.Order.Field = field
+		cw.Order.Method = Asc
+	}
+}
+func UseLowerCamel() CondOption {
+	return func(cw *CondWraper) {
+		cw.KeyFunc = LowerCamel
+	}
+}
+func UseUpperCamel() CondOption {
+	return func(cw *CondWraper) {
+		cw.KeyFunc = UpperCamel
+	}
+}
+
+func UseSnakeCase() CondOption {
+	return func(cw *CondWraper) {
+		cw.KeyFunc = SnakeCase
+	}
+}
+func ListAll() CondOption {
+	return func(cw *CondWraper) {
+		cw.Pager.Pagefrom = -1
+		cw.Pager.Pagesize = -1
+	}
+}
+func Descing(field string) CondOption {
+	return func(cw *CondWraper) {
+		cw.Order.Field = field
+		cw.Order.Method = Desc
+	}
+}
+
+func AddCond(conds ...Cond) CondOption {
+	return func(cw *CondWraper) {
+		cw.Conds = append(cw.Conds, conds...)
+	}
+}
+
 func (c *CondWraper) AddCond(conds ...Cond) *CondWraper {
 	for _, v := range conds {
 		if v.KeyFunc == "" {
@@ -227,6 +293,54 @@ func (c *CondWraper) AddCond(conds ...Cond) *CondWraper {
 func (c *CondWraper) AddOneCond(field string, op OPTYPE, value any) *CondWraper {
 	c.Conds = append(c.Conds, Cond{
 		Field: field, Op: op, Value: value,
+	})
+	return c
+}
+func (c *CondWraper) EQ(field string, value any) *CondWraper {
+	c.Conds = append(c.Conds, Cond{
+		Field: field, Op: OPEQ, Value: value,
+	})
+	return c
+}
+func (c *CondWraper) GT(field string, value any) *CondWraper {
+	c.Conds = append(c.Conds, Cond{
+		Field: field, Op: OPGT, Value: value,
+	})
+	return c
+}
+func (c *CondWraper) EGT(field string, value any) *CondWraper {
+	c.Conds = append(c.Conds, Cond{
+		Field: field, Op: OPEGT, Value: value,
+	})
+	return c
+}
+func (c *CondWraper) Like(field string, value any) *CondWraper {
+	c.Conds = append(c.Conds, Cond{
+		Field: field, Op: OPLIKE, Value: value,
+	})
+	return c
+}
+func (c *CondWraper) LT(field string, value any) *CondWraper {
+	c.Conds = append(c.Conds, Cond{
+		Field: field, Op: OPLT, Value: value,
+	})
+	return c
+}
+func (c *CondWraper) LET(field string, value any) *CondWraper {
+	c.Conds = append(c.Conds, Cond{
+		Field: field, Op: OPLET, Value: value,
+	})
+	return c
+}
+func (c *CondWraper) In(field string, value any) *CondWraper {
+	c.Conds = append(c.Conds, Cond{
+		Field: field, Op: OPIN, Value: value,
+	})
+	return c
+}
+func (c *CondWraper) Between(field string, value any) *CondWraper {
+	c.Conds = append(c.Conds, Cond{
+		Field: field, Op: OPBETWEEN, Value: value,
 	})
 	return c
 }

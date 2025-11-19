@@ -11,6 +11,10 @@ type Meta struct {
 	Field string `json:"field"`
 	Title string `json:"title"`
 }
+type CellValue struct {
+	Name  string
+	Value any
+}
 type DataItem interface {
 	Keys() []string
 	Value(key string) any

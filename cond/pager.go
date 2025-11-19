@@ -7,7 +7,7 @@ type Pager struct {
 
 func NoLimitPager() Pager {
 	return Pager{
-		Pagefrom: 0,
+		Pagefrom: -1,
 		Pagesize: -1,
 	}
 }
@@ -15,6 +15,9 @@ func (p Pager) Limit() int {
 	return p.Pagesize
 }
 func (p Pager) Offset() int {
+	if p.Pagefrom == -1 {
+		return -1
+	}
 	if p.Pagefrom < 1 {
 		return 0
 	} else {
