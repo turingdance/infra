@@ -17,11 +17,12 @@ func (o Order) Asc() string {
 	return o.Field + " asc "
 }
 func (o Order) Build() (string, error) {
-	if o.Method == "asc" {
+	switch o.Method {
+	case Asc:
 		return o.Asc(), nil
-	} else if o.Method == "desc" {
+	case Desc:
 		return o.Desc(), nil
-	} else {
+	default:
 		return o.Field, nil
 	}
 }

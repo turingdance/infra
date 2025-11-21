@@ -64,8 +64,12 @@ func ListAll[T any](dbengin *gorm.DB, model *T, wraper *cond.CondWraper, fields 
 // 创建一条记录
 func Create[T any](dbengin *gorm.DB, model *T) (r *T, err error) {
 	db := dbengin.Model(model)
-	err = db.Create(model).Error
-	return model, err
+	result := db.Create(model)
+	if result.RowsAffected == 1 {
+		return model, nil
+	} else {
+		return nil, result.Error
+	}
 }
 
 // 修改一条记录
@@ -92,8 +96,12 @@ func First[T any](dbengin *gorm.DB, model *T, wraper cond.CondWraper) (r *T, err
 		}
 		db = db.Where(sql, arg)
 	}
-	err = dbengin.Limit(1).Where(model).First(model).Error
-	return model, err
+	result := dbengin.Limit(1).Where(model).First(model)
+	if result.RowsAffected == 1 {
+		return model, nil
+	} else {
+		return nil, result.Error
+	}
 }
 
 // 最后一条记录
@@ -106,8 +114,12 @@ func Last[T any](dbengin *gorm.DB, model *T, wraper cond.CondWraper) (r *T, err 
 		}
 		db = db.Where(sql, arg)
 	}
-	err = dbengin.Limit(1).Where(model).Last(model).Error
-	return model, err
+	result := dbengin.Limit(1).Where(model).Last(model)
+	if result.RowsAffected == 1 {
+		return model, nil
+	} else {
+		return nil, result.Error
+	}
 
 }
 func Take[T any](dbengin *gorm.DB, model *T, wraper cond.CondWraper) (r *T, err error) {
@@ -122,11 +134,19 @@ func Take[T any](dbengin *gorm.DB, model *T, wraper cond.CondWraper) (r *T, err 
 	if order, err := wraper.Order.Build(); err == nil && order != "" {
 		db = db.Order(order)
 	}
-	err = db.Limit(1).Where(model).Find(model).Error
-	return model, err
+	result := db.Limit(1).Where(model).Find(model)
+	if result.RowsAffected == 1 {
+		return model, nil
+	} else {
+		return nil, result.Error
+	}
 }
 
 func TakeByPrimaryKey[T any](dbengin *gorm.DB, model *T) (r *T, err error) {
-	err = dbengin.Find(model).Limit(1).Error
-	return model, err
+	result := dbengin.Find(model).Limit(1)
+	if result.RowsAffected == 1 {
+		return model, nil
+	} else {
+		return nil, result.Error
+	}
 }

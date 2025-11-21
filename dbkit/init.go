@@ -16,15 +16,16 @@ import (
 )
 
 func TOString(l logger.LogLevel) string {
-	if l == logger.Error {
+	switch l {
+	case logger.Error:
 		return "error"
-	} else if l == logger.Info {
-		return "INFO"
-	} else if l == logger.Silent {
-		return "SILENY"
-	} else if l == logger.Warn {
+	case logger.Info:
+		return "info"
+	case logger.Silent:
+		return "silent"
+	case logger.Warn:
 		return "warn"
-	} else {
+	default:
 		return fmt.Sprintf("%d", l)
 	}
 }
