@@ -33,18 +33,19 @@ func (s *UnixDomainService) udspath() string {
 }
 func (s *UnixDomainService) ServeString() (chdata chan string, cherr chan error) {
 	udsPath := s.udspath()
-	if runtime.GOOS != "windows" {
-		_ = os.Remove(udsPath)
-	}
+
+	os.Remove(udsPath)
+
 	chdata = make(chan string, 1024)
 	cherr = make(chan error, 10)
 	// 启动 UDS 服务端（网络类型：unix）
 	listener, err := net.Listen("unix", udsPath)
 	if err != nil {
 		cherr <- err
+		return
 	}
 	defer func() {
-		_ = listener.Close()
+		listener.Close()
 		if runtime.GOOS != "windows" {
 			_ = os.Remove(udsPath) // 退出时清理 .sock 文件
 		}
@@ -53,7 +54,7 @@ func (s *UnixDomainService) ServeString() (chdata chan string, cherr chan error)
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			fmt.Printf("接收连接失败：%v\n", err)
+			conn.Write([]byte(err.Error()))
 			continue
 		}
 		go s.handleClientConn(conn, chdata, cherr) // 异步处理，不阻塞主循环
@@ -62,8 +63,6 @@ func (s *UnixDomainService) ServeString() (chdata chan string, cherr chan error)
 
 func (s *UnixDomainService) handleClientConn(conn net.Conn, chdata chan string, cherr chan error) {
 	defer conn.Close() // 连接结束自动关闭
-	clientAddr := conn.RemoteAddr().String()
-	fmt.Printf("客户端连接成功：%s\n", clientAddr)
 
 	// 带缓冲的读写器（提升小数据读写效率，减少系统调用）
 	reader := bufio.NewReader(conn)
@@ -72,6 +71,7 @@ func (s *UnixDomainService) handleClientConn(conn net.Conn, chdata chan string, 
 		data, err := reader.ReadString('\n') // 按换行符分割数据（自定义分隔符也可）
 		if err != nil {
 			cherr <- err
+			conn.Write([]byte(err.Error()))
 			return
 		}
 		chdata <- data
