@@ -1,14 +1,18 @@
 package ipckit
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
+	"io"
+	"net"
 	"runtime"
 	"strings"
 )
 
 type UnixDomainService struct {
 	Name               string
-	Delim              string
+	Patern             []byte
 	BufferSizeInput    int
 	BufferSizeOut      int
 	SecurityDescriptor string
@@ -17,7 +21,7 @@ type UdsOption func(*UnixDomainService)
 
 func SetDelim(delim string) UdsOption {
 	return func(uds *UnixDomainService) {
-		uds.Delim = delim
+		uds.Patern = []byte(delim)
 	}
 }
 func SetName(name string) UdsOption {
@@ -43,7 +47,7 @@ func SetSecurityDescriptor(str string) UdsOption {
 func NewUnixDomainService(name string, opts ...UdsOption) *UnixDomainService {
 	s := &UnixDomainService{
 		Name:               strings.ToLower(name),
-		Delim:              "\n",
+		Patern:             []byte("\n"),
 		BufferSizeInput:    256,
 		BufferSizeOut:      256,
 		SecurityDescriptor: "D:P(A;;GA;;;IU)",
@@ -54,17 +58,7 @@ func NewUnixDomainService(name string, opts ...UdsOption) *UnixDomainService {
 	return s
 }
 func Pipe(name string, opts ...UdsOption) *UnixDomainService {
-	s := &UnixDomainService{
-		Name:               strings.ToLower(name),
-		Delim:              "\n",
-		BufferSizeInput:    256,
-		BufferSizeOut:      256,
-		SecurityDescriptor: "D:P(A;;GA;;;IU)",
-	}
-	for _, v := range opts {
-		v(s)
-	}
-	return s
+	return NewUnixDomainService(name, opts...)
 }
 func (s *UnixDomainService) Path() string {
 	return s.udspath()
@@ -78,5 +72,35 @@ func (s *UnixDomainService) udspath() string {
 	default:
 		return fmt.Sprintf("/tmp/%s.sock", s.Name)
 
+	}
+}
+
+// 分割函数
+func (s *UnixDomainService) Splitter(data []byte, atEOF bool) (advance int, token []byte, err error) {
+	// 1. 如果已经到达文件末尾且没有数据了，直接返回。
+	if atEOF && len(data) == 0 {
+		return 0, nil, nil
+	}
+	index := bytes.Index(data, s.Patern)
+	if index == -1 {
+		return 0, nil, nil
+	}
+	return index + len(s.Patern), data[:index], nil
+}
+
+func (s *UnixDomainService) handleByteClientConn(conn net.Conn, chdata chan []byte, cherr chan error) {
+	defer conn.Close() // 连接结束自动关闭
+	scanner := bufio.NewScanner(conn)
+	scanner.Split(s.Splitter)
+	for scanner.Scan() {
+		pkg := scanner.Bytes()
+		chdata <- pkg
+	}
+	if err := scanner.Err(); err != nil {
+		if err == io.EOF {
+			return
+		} else {
+			cherr <- err
+		}
 	}
 }

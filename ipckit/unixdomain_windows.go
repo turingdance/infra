@@ -4,10 +4,8 @@
 package ipckit
 
 import (
-	"bufio"
 	"fmt"
 	"io"
-	"net"
 	"os"
 
 	gw "github.com/Microsoft/go-winio"
@@ -60,25 +58,6 @@ func (s *UnixDomainService) Serve() (chdata chan []byte, cherr chan error) {
 		}
 	}()
 	return
-}
-
-func (s *UnixDomainService) handleByteClientConn(conn net.Conn, chdata chan []byte, cherr chan error) {
-	defer conn.Close() // 连接结束自动关闭
-	reader := bufio.NewReader(conn)
-	for {
-		// 读取客户端数据（阻塞，直到收到数据或连接断开）
-		data := make([]byte, s.BufferSizeInput)
-		if size, err := reader.Read(data); err != nil {
-			if err == io.EOF {
-				return
-			} else {
-				cherr <- err
-			}
-		} else {
-			chdata <- data[:size]
-		}
-
-	}
 }
 
 // white
