@@ -93,6 +93,18 @@ func (s *UnixDomainService) WriteLine(input string) (num int, err error) {
 	return conn.Write([]byte(input + "\n"))
 }
 
+// white
+func (s *UnixDomainService) WriteString(input string) (num int, err error) {
+	udsPath := s.udspath()
+	// 连接 UDS 服务端
+	conn, err := gw.DialPipe(udsPath, nil)
+	if err != nil {
+		return 0, fmt.Errorf("客户端连接失败：%w", err)
+	}
+	defer conn.Close()
+	return conn.Write([]byte(input))
+}
+
 func (s *UnixDomainService) WriteBytes(input []byte) (num int, err error) {
 	udsPath := s.udspath()
 	// 连接 UDS 服务端
