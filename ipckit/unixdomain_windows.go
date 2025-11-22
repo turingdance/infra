@@ -48,7 +48,7 @@ func (s *UnixDomainService) Serve() (chdata chan []byte, cherr chan error) {
 		for {
 			if conn, err := listener.Accept(); err != nil {
 				if err == io.EOF {
-
+					continue
 				} else {
 					cherr <- err
 					continue
@@ -67,13 +67,17 @@ func (s *UnixDomainService) handleByteClientConn(conn net.Conn, chdata chan []by
 	reader := bufio.NewReader(conn)
 	for {
 		// 读取客户端数据（阻塞，直到收到数据或连接断开）
-		data := make([]byte, 0)
-		size, err := reader.Read(data)
-		if err != nil {
-			cherr <- err
-			return
+		data := make([]byte, s.BufferSizeInput)
+		if size, err := reader.Read(data); err != nil {
+			if err == io.EOF {
+				return
+			} else {
+				cherr <- err
+			}
+		} else {
+			chdata <- data[:size]
 		}
-		chdata <- data[:size]
+
 	}
 }
 
