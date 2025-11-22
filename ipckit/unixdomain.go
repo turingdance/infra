@@ -53,6 +53,19 @@ func NewUnixDomainService(name string, opts ...UdsOption) *UnixDomainService {
 	}
 	return s
 }
+func Pipe(name string, opts ...UdsOption) *UnixDomainService {
+	s := &UnixDomainService{
+		Name:               strings.ToLower(name),
+		Delim:              "\n",
+		BufferSizeInput:    256,
+		BufferSizeOut:      256,
+		SecurityDescriptor: "D:P(A;;GA;;;IU)",
+	}
+	for _, v := range opts {
+		v(s)
+	}
+	return s
+}
 func (s *UnixDomainService) Path() string {
 	return s.udspath()
 }
