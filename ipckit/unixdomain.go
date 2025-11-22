@@ -7,15 +7,54 @@ import (
 )
 
 type UnixDomainService struct {
-	Name string
+	Name               string
+	Delim              string
+	BufferSizeInput    int
+	BufferSizeOut      int
+	SecurityDescriptor string
 }
+type UdsOption func(*UnixDomainService)
 
-func NewUnixDomainService(name string) *UnixDomainService {
-	s := &UnixDomainService{
-		Name: strings.ToLower(name),
+func SetDelim(delim string) UdsOption {
+	return func(uds *UnixDomainService) {
+		uds.Delim = delim
 	}
-
+}
+func SetName(name string) UdsOption {
+	return func(uds *UnixDomainService) {
+		uds.Name = name
+	}
+}
+func SetBufferSizeInput(size int) UdsOption {
+	return func(uds *UnixDomainService) {
+		uds.BufferSizeInput = size
+	}
+}
+func SetBufferSizeOut(size int) UdsOption {
+	return func(uds *UnixDomainService) {
+		uds.BufferSizeOut = size
+	}
+}
+func SetSecurityDescriptor(str string) UdsOption {
+	return func(uds *UnixDomainService) {
+		uds.SecurityDescriptor = str
+	}
+}
+func NewUnixDomainService(name string, opts ...UdsOption) *UnixDomainService {
+	s := &UnixDomainService{
+		Name:               strings.ToLower(name),
+		Delim:              "\n",
+		BufferSizeInput:    256,
+		BufferSizeOut:      256,
+		SecurityDescriptor: "D:P(A;;GA;;;IU)",
+	}
+	for _, v := range opts {
+		v(s)
+	}
 	return s
+}
+func (s *UnixDomainService) Path() string {
+	return s.udspath()
 }
 func (s *UnixDomainService) udspath() string {
 	switch runtime.GOOS {

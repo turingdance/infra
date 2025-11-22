@@ -6,93 +6,60 @@ package ipckit
 import (
 	"bufio"
 	"fmt"
-	"log"
+	"io"
 	"net"
 	"os"
-	"runtime"
 
 	gw "github.com/Microsoft/go-winio"
 )
 
-func (s *UnixDomainService) ServeString() (chdata chan string, cherr chan error) {
+func (s *UnixDomainService) Serve() (chdata chan []byte, cherr chan error) {
 	udsPath := s.udspath()
-
-	os.RemoveAll(udsPath)
+	chdata = make(chan []byte, 10)
+	cherr = make(chan error, 2)
 	if _, err := os.Stat(udsPath); err == nil {
-		if err := os.Remove(udsPath); err != nil {
-			log.Fatalf("删除旧管道失败：%v", err)
+		if err := os.RemoveAll(udsPath); err != nil {
+			cherr <- err
+			return
 		}
 	}
-
-	chdata = make(chan string, 1024)
-	cherr = make(chan error, 10)
 	// 启动 UDS 服务端（网络类型：unix）
-	listener, err := gw.ListenPipe(udsPath, nil)
+	listener, err := gw.ListenPipe(udsPath, &gw.PipeConfig{
+		// 管道模式：消息模式（MessageMode=true）或字节流模式（默认 false）
+		// 消息模式下，Read 会按发送的消息边界返回数据，不会粘包
+		MessageMode: true,
+		// 输入缓冲区大小（默认 4096 字节）
+		InputBufferSize: int32(s.BufferSizeInput),
+		// 输出缓冲区大小（默认 4096 字节）
+		OutputBufferSize: int32(s.BufferSizeOut),
+		// 权限控制（可选）：限制哪些用户可访问管道
+		// 示例：允许当前用户完全控制
+		SecurityDescriptor: s.SecurityDescriptor,
+	})
 	if err != nil {
 		cherr <- err
 		return
 	}
 	defer func() {
-		listener.Close()
-		if runtime.GOOS != "windows" {
-			_ = os.Remove(udsPath) // 退出时清理 .sock 文件
-		}
+		os.Remove(udsPath) // 退出时清理 .sock 文件
 	}()
 	// 并发处理客户端连接（每个连接开 1 个 goroutine，轻量无压力）
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			conn.Write([]byte(err.Error()))
-			continue
-		}
-		go s.handleClientConn(conn, chdata, cherr) // 异步处理，不阻塞主循环
-	}
-}
+	go func() {
+		for {
+			if conn, err := listener.Accept(); err != nil {
+				if err == io.EOF {
 
-func (s *UnixDomainService) handleClientConn(conn net.Conn, chdata chan string, cherr chan error) {
-	defer conn.Close() // 连接结束自动关闭
+				} else {
+					cherr <- err
+					continue
+				}
+			} else {
+				go s.handleByteClientConn(conn, chdata, cherr) // 异步处理，不阻塞主循环
+			}
 
-	// 带缓冲的读写器（提升小数据读写效率，减少系统调用）
-	reader := bufio.NewReader(conn)
-	for {
-		// 读取客户端数据（阻塞，直到收到数据或连接断开）
-		data, err := reader.ReadString('\n') // 按换行符分割数据（自定义分隔符也可）
-		if err != nil {
-			cherr <- err
-			conn.Write([]byte(err.Error()))
-			return
-		}
-		chdata <- data
-	}
-}
-
-func (s *UnixDomainService) ServeBytes() (chdata chan []byte, cherr chan error) {
-	udsPath := s.udspath()
-	if runtime.GOOS != "windows" {
-		_ = os.Remove(udsPath)
-	}
-	chdata = make(chan []byte, 1024)
-	cherr = make(chan error, 10)
-	// 启动 UDS 服务端（网络类型：unix）
-	listener, err := gw.ListenPipe(udsPath, nil)
-	if err != nil {
-		cherr <- err
-	}
-	defer func() {
-		_ = listener.Close()
-		if runtime.GOOS != "windows" {
-			_ = os.Remove(udsPath) // 退出时清理 .sock 文件
 		}
 	}()
-	// 并发处理客户端连接（每个连接开 1 个 goroutine，轻量无压力）
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			cherr <- err
-			continue
-		}
-		go s.handleByteClientConn(conn, chdata, cherr) // 异步处理，不阻塞主循环
-	}
+	return
 }
 
 func (s *UnixDomainService) handleByteClientConn(conn net.Conn, chdata chan []byte, cherr chan error) {

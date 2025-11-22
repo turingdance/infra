@@ -6,22 +6,13 @@ package ipckit
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"net"
-	"os"
-	"runtime"
 )
 
-func (s *UnixDomainService) ServeString() (chdata chan string, cherr chan error) {
+func (s *UnixDomainService) ServeBytes() (chdata chan []byte, cherr chan error) {
 	udsPath := s.udspath()
-
-	if _, err := os.Stat(udsPath); err == nil {
-		if err := os.RemoveAll(udsPath); err != nil {
-			cherr <- err
-			return
-		}
-	}
-
-	chdata = make(chan string, 1024)
+	chdata = make(chan []byte, 1024)
 	cherr = make(chan error, 10)
 	// 启动 UDS 服务端（网络类型：unix）
 	listener, err := net.Listen("unix", udsPath)
@@ -29,67 +20,23 @@ func (s *UnixDomainService) ServeString() (chdata chan string, cherr chan error)
 		cherr <- err
 		return
 	}
-	defer func() {
-		listener.Close()
-
-		os.Remove(udsPath) // 退出时清理 .sock 文件
-
-	}()
 	// 并发处理客户端连接（每个连接开 1 个 goroutine，轻量无压力）
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			conn.Write([]byte(err.Error()))
-			continue
-		}
-		go s.handleClientConn(conn, chdata, cherr) // 异步处理，不阻塞主循环
-	}
-}
+	go func() {
+		for {
+			if conn, err := listener.Accept(); err != nil {
+				if err == io.EOF {
 
-func (s *UnixDomainService) handleClientConn(conn net.Conn, chdata chan string, cherr chan error) {
-	defer conn.Close() // 连接结束自动关闭
+				} else {
+					cherr <- err
+					continue
+				}
+			} else {
+				go s.handleByteClientConn(conn, chdata, cherr) // 异步处理，不阻塞主循环
+			}
 
-	// 带缓冲的读写器（提升小数据读写效率，减少系统调用）
-	reader := bufio.NewReader(conn)
-	for {
-		// 读取客户端数据（阻塞，直到收到数据或连接断开）
-		data, err := reader.ReadString('\n') // 按换行符分割数据（自定义分隔符也可）
-		if err != nil {
-			cherr <- err
-			conn.Write([]byte(err.Error()))
-			return
-		}
-		chdata <- data
-	}
-}
-
-func (s *UnixDomainService) ServeBytes() (chdata chan []byte, cherr chan error) {
-	udsPath := s.udspath()
-	if runtime.GOOS != "windows" {
-		_ = os.Remove(udsPath)
-	}
-	chdata = make(chan []byte, 1024)
-	cherr = make(chan error, 10)
-	// 启动 UDS 服务端（网络类型：unix）
-	listener, err := net.Listen("unix", udsPath)
-	if err != nil {
-		cherr <- err
-	}
-	defer func() {
-		_ = listener.Close()
-		if runtime.GOOS != "windows" {
-			_ = os.Remove(udsPath) // 退出时清理 .sock 文件
 		}
 	}()
-	// 并发处理客户端连接（每个连接开 1 个 goroutine，轻量无压力）
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			cherr <- err
-			continue
-		}
-		go s.handleByteClientConn(conn, chdata, cherr) // 异步处理，不阻塞主循环
-	}
+	return
 }
 
 func (s *UnixDomainService) handleByteClientConn(conn net.Conn, chdata chan []byte, cherr chan error) {
@@ -97,13 +44,17 @@ func (s *UnixDomainService) handleByteClientConn(conn net.Conn, chdata chan []by
 	reader := bufio.NewReader(conn)
 	for {
 		// 读取客户端数据（阻塞，直到收到数据或连接断开）
-		data := make([]byte, 0)
-		size, err := reader.Read(data)
-		if err != nil {
-			cherr <- err
-			return
+		data := make([]byte, s.BufferSizeInput)
+		if size, err := reader.Read(data); err != nil {
+			if err == io.EOF {
+				return
+			} else {
+				cherr <- err
+			}
+		} else {
+			chdata <- data[:size]
 		}
-		chdata <- data[:size]
+
 	}
 }
 
