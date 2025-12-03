@@ -12,7 +12,7 @@ type Service struct {
 // 搜索
 func (s *Service) Search(model interface{}, wraper *cond.CondWraper) (result interface{}, total int64, err error) {
 	db := s.dbengin.Model(model)
-	for _, v := range wraper.Conds {
+	for _, v := range wraper.Conds() {
 		sql, arg, err := v.Build()
 		if err != nil {
 			return nil, 0, err
@@ -35,7 +35,7 @@ func (s *Service) Search(model interface{}, wraper *cond.CondWraper) (result int
 // 搜索
 func (s *Service) ListAll(model interface{}, wraper *cond.CondWraper) (result interface{}, total int64, err error) {
 	db := s.dbengin.Model(model)
-	for _, v := range wraper.Conds {
+	for _, v := range wraper.Conds() {
 		sql, arg, err := v.Build()
 		if err != nil {
 			return nil, 0, err
@@ -79,7 +79,7 @@ func (s *Service) Delete(model interface{}, query interface{}, args ...interface
 // 最先1条记录
 func (s *Service) First(model interface{}, wraper cond.CondWraper) (r interface{}, err error) {
 	db := s.dbengin
-	for _, v := range wraper.Conds {
+	for _, v := range wraper.Conds() {
 		sql, arg, err := v.Build()
 		if err != nil {
 			return nil, err
@@ -93,7 +93,7 @@ func (s *Service) First(model interface{}, wraper cond.CondWraper) (r interface{
 // 最后一条记录
 func (s *Service) Last(model interface{}, wraper cond.CondWraper) (r interface{}, err error) {
 	db := s.dbengin
-	for _, v := range wraper.Conds {
+	for _, v := range wraper.Conds() {
 		sql, arg, err := v.Build()
 		if err != nil {
 			return nil, err
@@ -106,7 +106,7 @@ func (s *Service) Last(model interface{}, wraper cond.CondWraper) (r interface{}
 }
 func (s *Service) Take(model interface{}, wraper cond.CondWraper) (r interface{}, err error) {
 	db := s.dbengin
-	for _, v := range wraper.Conds {
+	for _, v := range wraper.Conds() {
 		sql, arg, err := v.Build()
 		if err != nil {
 			return nil, err

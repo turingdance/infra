@@ -16,13 +16,14 @@ type Cond struct {
 }
 
 func (c Cond) GetField() string {
-	if c.KeyFunc == LowerCamel {
+	switch c.KeyFunc {
+	case LowerCamel:
 		return toLowerCamelCase(c.Field)
-	} else if c.KeyFunc == UpperCamel {
+	case UpperCamel:
 		return toUpperCamelCase(c.Field)
-	} else if c.KeyFunc == SnakeCase {
+	case SnakeCase:
 		return toSnakeCase(c.Field)
-	} else {
+	default:
 		return toSnakeCase(c.Field)
 	}
 }
@@ -32,22 +33,24 @@ const PAGESIZEMAX = 1024 * 1024
 // 转换
 func (c Cond) Build() (sql string, value interface{}, err error) {
 	err = nil
-	if c.Op == OPEQ {
+	switch c.Op {
+	case OPEQ:
 		return fmt.Sprintf("%s = ?", c.GetField()), c.Value, err
-	} else if c.Op == OPEGT {
+	case OPEGT:
 		return fmt.Sprintf("%s >= ?", c.GetField()), c.Value, err
-	} else if c.Op == OPGT {
+	case OPGT:
 		return fmt.Sprintf("%s > ?", c.GetField()), c.Value, err
-	} else if c.Op == OPLT {
+	case OPLT:
 		return fmt.Sprintf("%s < ?", c.GetField()), c.Value, err
-	} else if c.Op == OPLET {
+	case OPLET:
 		return fmt.Sprintf("%s <= ?", c.GetField()), c.Value, err
-	} else if c.Op == OPLIKE {
+	case OPLIKE:
 		return fmt.Sprintf("%s like ?", c.GetField()), "%" + fmt.Sprintf("%s", c.Value) + "%", err
-	} else if c.Op == OPIN {
+	case OPIN:
 		return fmt.Sprintf("%s in ?", c.GetField()), c.Value, err
-	} else if c.Op == OPBETWEEN {
-		if c.DataType == INTARR {
+	case OPBETWEEN:
+		switch c.DataType {
+		case INTARR:
 			value = 1
 			err = nil
 			switch c.Value.(type) {
@@ -70,14 +73,14 @@ func (c Cond) Build() (sql string, value interface{}, err error) {
 				err = errors.New("数据格式不正确")
 			}
 			return sql, value, err
-		} else if c.DataType == STRARR {
+		case STRARR:
 			if value, is := c.Value.([]string); is {
 				return fmt.Sprintf("%s between %s and %s and 1 = ?", c.GetField(), value[0], value[1]), 1, err
 			} else {
 				return "", "", errors.New("数据格式不正确")
 			}
 
-		} else {
+		default:
 			if value, is := c.Value.([]string); is {
 				return fmt.Sprintf("%s between %s and %s and 1 = ?", c.GetField(), value[0], value[1]), 1, err
 			} else if value, is := c.Value.([]int); is {
@@ -86,7 +89,7 @@ func (c Cond) Build() (sql string, value interface{}, err error) {
 				return " 1 = ? ", 1, err
 			}
 		}
-	} else {
+	default:
 		return " 1 = ? ", 1, err
 	}
 }
@@ -185,18 +188,20 @@ const (
 )
 
 type CondWraper struct {
-	Pager   Pager       `json:"pager"`
-	Order   Order       `json:"order"`
-	Conds   []Cond      `json:"conds"`
+	Pager   Pager `json:"pager"`
+	Order   Order `json:"order"`
+	conds   []Cond
 	KeyFunc KeyFuncType `json:"keyfunc"`
+	mapcond map[string]Cond
 }
 
 func NewListAllWraper(opts ...CondOption) *CondWraper {
 	r := &CondWraper{
-		Conds:   make([]Cond, 0),
+		conds:   make([]Cond, 0),
 		Order:   Order{},
 		Pager:   Pager{Pagefrom: -1, Pagesize: -1},
 		KeyFunc: SnakeCase,
+		mapcond: make(map[string]Cond, 0),
 	}
 	for _, v := range opts {
 		v(r)
@@ -205,7 +210,7 @@ func NewListAllWraper(opts ...CondOption) *CondWraper {
 }
 func NoLimitWraper(opts ...CondOption) *CondWraper {
 	r := &CondWraper{
-		Conds:   make([]Cond, 0),
+		conds:   make([]Cond, 0),
 		Order:   Order{},
 		Pager:   Pager{Pagefrom: -1, Pagesize: -1},
 		KeyFunc: SnakeCase,
@@ -220,7 +225,7 @@ type CondOption func(*CondWraper)
 
 func NewCondWrapper(opts ...CondOption) *CondWraper {
 	r := &CondWraper{
-		Conds:   make([]Cond, 0),
+		conds:   make([]Cond, 0),
 		Order:   Order{},
 		Pager:   Pager{Pagefrom: 0, Pagesize: 20},
 		KeyFunc: SnakeCase,
@@ -277,7 +282,7 @@ func Descing(field string) CondOption {
 
 func AddCond(conds ...Cond) CondOption {
 	return func(cw *CondWraper) {
-		cw.Conds = append(cw.Conds, conds...)
+		cw.conds = append(cw.conds, conds...)
 	}
 }
 
@@ -286,60 +291,88 @@ func (c *CondWraper) AddCond(conds ...Cond) *CondWraper {
 		if v.KeyFunc == "" {
 			v.KeyFunc = SnakeCase
 		}
-		c.Conds = append(c.Conds, v)
+		c.conds = append(c.conds, v)
 	}
 	return c
 }
+
+// 唯一性校验
+func (c *CondWraper) Conds() (conds []Cond) {
+	var keys map[string]bool = map[string]bool{}
+	conds = make([]Cond, 0)
+	for _, v := range c.conds {
+		k := fmt.Sprintf("%s-%s", v.Field, v.Op)
+		if _, ok := keys[k]; !ok {
+			conds = append(conds, v)
+			keys[k] = true
+		}
+	}
+	return conds
+}
+
+// 是否存在这个条件
+func (c *CondWraper) CondIsExist(field string, op OPTYPE) (exist bool) {
+	var keys map[string]bool = map[string]bool{}
+
+	for _, v := range c.conds {
+		k := fmt.Sprintf("%s-%s", v.Field, v.Op)
+		keys[k] = true
+	}
+	_, exist = keys[fmt.Sprintf("%s-%s", field, op)]
+	return exist
+}
 func (c *CondWraper) AddOneCond(field string, op OPTYPE, value any) *CondWraper {
-	c.Conds = append(c.Conds, Cond{
+	c.conds = append(c.conds, Cond{
 		Field: field, Op: op, Value: value,
 	})
 	return c
 }
+
 func (c *CondWraper) EQ(field string, value any) *CondWraper {
-	c.Conds = append(c.Conds, Cond{
+
+	c.conds = append(c.conds, Cond{
 		Field: field, Op: OPEQ, Value: value,
 	})
 	return c
 }
 func (c *CondWraper) GT(field string, value any) *CondWraper {
-	c.Conds = append(c.Conds, Cond{
+	c.conds = append(c.conds, Cond{
 		Field: field, Op: OPGT, Value: value,
 	})
 	return c
 }
 func (c *CondWraper) EGT(field string, value any) *CondWraper {
-	c.Conds = append(c.Conds, Cond{
+	c.conds = append(c.conds, Cond{
 		Field: field, Op: OPEGT, Value: value,
 	})
 	return c
 }
 func (c *CondWraper) Like(field string, value any) *CondWraper {
-	c.Conds = append(c.Conds, Cond{
+	c.conds = append(c.conds, Cond{
 		Field: field, Op: OPLIKE, Value: value,
 	})
 	return c
 }
 func (c *CondWraper) LT(field string, value any) *CondWraper {
-	c.Conds = append(c.Conds, Cond{
+	c.conds = append(c.conds, Cond{
 		Field: field, Op: OPLT, Value: value,
 	})
 	return c
 }
 func (c *CondWraper) LET(field string, value any) *CondWraper {
-	c.Conds = append(c.Conds, Cond{
+	c.conds = append(c.conds, Cond{
 		Field: field, Op: OPLET, Value: value,
 	})
 	return c
 }
 func (c *CondWraper) In(field string, value any) *CondWraper {
-	c.Conds = append(c.Conds, Cond{
+	c.conds = append(c.conds, Cond{
 		Field: field, Op: OPIN, Value: value,
 	})
 	return c
 }
 func (c *CondWraper) Between(field string, value any) *CondWraper {
-	c.Conds = append(c.Conds, Cond{
+	c.conds = append(c.conds, Cond{
 		Field: field, Op: OPBETWEEN, Value: value,
 	})
 	return c

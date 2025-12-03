@@ -8,7 +8,7 @@ import (
 // 搜索
 func Search[T any](dbengin *gorm.DB, model *T, wraper *cond.CondWraper, fields ...string) (result []T, total int64, err error) {
 	db := dbengin.Model(model)
-	for _, v := range wraper.Conds {
+	for _, v := range wraper.Conds() {
 		sql, arg, err := v.Build()
 		if err != nil {
 			return nil, 0, err
@@ -36,7 +36,7 @@ func Search[T any](dbengin *gorm.DB, model *T, wraper *cond.CondWraper, fields .
 // 搜索
 func ListAll[T any](dbengin *gorm.DB, model *T, wraper *cond.CondWraper, fields ...string) (result []T, total int64, err error) {
 	db := dbengin.Model(model)
-	for _, v := range wraper.Conds {
+	for _, v := range wraper.Conds() {
 		sql, arg, err := v.Build()
 		if err != nil {
 			return nil, 0, err
@@ -89,14 +89,14 @@ func Delete[T any](dbengin *gorm.DB, model *T, query interface{}, args ...interf
 // 最先1条记录
 func First[T any](dbengin *gorm.DB, model *T, wraper cond.CondWraper) (r *T, err error) {
 	db := dbengin
-	for _, v := range wraper.Conds {
+	for _, v := range wraper.Conds() {
 		sql, arg, err := v.Build()
 		if err != nil {
 			return nil, err
 		}
 		db = db.Where(sql, arg)
 	}
-	result := dbengin.Limit(1).Where(model).First(model)
+	result := db.Limit(1).First(model)
 	if result.RowsAffected == 1 {
 		return model, nil
 	} else {
@@ -107,14 +107,14 @@ func First[T any](dbengin *gorm.DB, model *T, wraper cond.CondWraper) (r *T, err
 // 最后一条记录
 func Last[T any](dbengin *gorm.DB, model *T, wraper cond.CondWraper) (r *T, err error) {
 	db := dbengin
-	for _, v := range wraper.Conds {
+	for _, v := range wraper.Conds() {
 		sql, arg, err := v.Build()
 		if err != nil {
 			return nil, err
 		}
 		db = db.Where(sql, arg)
 	}
-	result := dbengin.Limit(1).Where(model).Last(model)
+	result := db.Limit(1).Last(model)
 	if result.RowsAffected == 1 {
 		return model, nil
 	} else {
@@ -124,7 +124,7 @@ func Last[T any](dbengin *gorm.DB, model *T, wraper cond.CondWraper) (r *T, err 
 }
 func Take[T any](dbengin *gorm.DB, model *T, wraper cond.CondWraper) (r *T, err error) {
 	db := dbengin
-	for _, v := range wraper.Conds {
+	for _, v := range wraper.Conds() {
 		sql, arg, err := v.Build()
 		if err != nil {
 			return nil, err
