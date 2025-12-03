@@ -20,6 +20,10 @@ const (
 	SignerSh256 SignerMethod = "sh256"
 )
 
+type Enpryt struct {
+	Secret string
+	Method SignerMethod
+}
 type ISigner interface {
 	GenerateSignature(params map[string]string, expireAt int64) (string, error)
 	VerifySignature(params map[string]string, signature string, expireAt int64) (bool, error)
