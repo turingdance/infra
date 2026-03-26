@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/asjdf/gorm-cache/config"
 	ctllogger "github.com/turingdance/infra/logger"
 	"gorm.io/gorm/logger"
 )
@@ -93,14 +92,9 @@ func ParameterizedQueries(f bool) Option {
 }
 
 func Debug(f bool) Option {
+	//缓存中间件附加到gorm.DB
 	return func(ctx *DbContext) {
 		ctx.Debug = f
-	}
-}
-
-func UseCache(c *config.CacheConfig) Option {
-	return func(ctx *DbContext) {
-		ctx.cacheConfig = c
 	}
 }
 
@@ -117,7 +111,7 @@ type DbContext struct {
 	MaxOpenConns              int           // 最大打开连接数
 	ConnMaxLifetime           time.Duration // 连接最大生命周期
 	ConnMaxIdleTime           time.Duration // 连接最大空闲时间
-	cacheConfig               *config.CacheConfig
+	cacheOption               *CacheOption
 }
 
 func NewDbContext() *DbContext {
@@ -134,6 +128,6 @@ func NewDbContext() *DbContext {
 		MaxOpenConns:              10,
 		ConnMaxLifetime:           time.Hour * 1,
 		ConnMaxIdleTime:           time.Second * 10,
-		cacheConfig:               nil,
+		cacheOption:               nil,
 	}
 }

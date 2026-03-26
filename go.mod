@@ -40,10 +40,11 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.2.0 // indirect
-	github.com/asjdf/gorm-cache v1.3.0 // indirect
-	github.com/bluele/gcache v0.0.2 // indirect
+	github.com/go-redis/redis v6.15.9+incompatible // indirect
+	github.com/jinzhu/gorm v1.9.16 // indirect
 	github.com/karlseguin/ccache/v3 v3.0.3 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
+	github.com/turingdance/gormcache v0.0.0-20260326045910-681a9c7ae83c // indirect
 )
 
 require (
@@ -128,7 +129,7 @@ require (
 	github.com/libp2p/go-sockaddr v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mattn/go-sqlite3 v1.14.22 // indirect
+	github.com/mattn/go-sqlite3 v1.14.37 // indirect
 	github.com/microsoft/go-mssqldb v1.6.0 // indirect
 	github.com/miekg/dns v1.1.63 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
