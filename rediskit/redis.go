@@ -2,6 +2,7 @@ package rediskit
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -24,11 +25,14 @@ func (s *RedisCtrl) Set(k string, v interface{}, t time.Duration) error {
 }
 
 func (s *RedisCtrl) Get(k string) (result interface{}, err error) {
-	cmd := s.Rdb.Get(context.Background(), k)
-	if cmd.Err() != nil {
-		return nil, cmd.Err()
+	result, err = s.Rdb.Get(context.Background(), k).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
-	err = cmd.Scan(&result)
 	return result, err
 }
 
