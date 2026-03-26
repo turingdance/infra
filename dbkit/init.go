@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	gormcache "github.com/turingdance/gormcache"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -113,8 +114,16 @@ func OpenDb(linkstr string, opts ...Option) (db *gorm.DB, err error) {
 	sqlDb.SetMaxOpenConns(ctx.MaxOpenConns)
 	sqlDb.SetConnMaxIdleTime(ctx.ConnMaxIdleTime)
 	sqlDb.SetConnMaxLifetime(ctx.ConnMaxLifetime)
-	// if nil != ctx.cacheOption {
-	// 	gcache.AttachDB(db, ctx.cacheOption.option, ctx.cacheOption.redis)
-	// }
+	if nil != ctx.cacheOption {
+		cachePlugin := gormcache.New(&gormcache.Config{
+			Store:      ctx.cacheOption.store,
+			Serializer: ctx.cacheOption.serializer,
+		})
+
+		if err = db.Use(cachePlugin); err != nil {
+			return db, err
+		}
+	}
+
 	return db, err
 }
