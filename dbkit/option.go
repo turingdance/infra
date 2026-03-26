@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/asjdf/gorm-cache/config"
 	ctllogger "github.com/turingdance/infra/logger"
 	"gorm.io/gorm/logger"
 )
@@ -97,6 +98,12 @@ func Debug(f bool) Option {
 	}
 }
 
+func UseCache(c *config.CacheConfig) Option {
+	return func(ctx *DbContext) {
+		ctx.cacheConfig = c
+	}
+}
+
 type DbContext struct {
 	LogLevel                  logger.LogLevel
 	IgnoreRecordNotFoundError bool
@@ -110,6 +117,7 @@ type DbContext struct {
 	MaxOpenConns              int           // 最大打开连接数
 	ConnMaxLifetime           time.Duration // 连接最大生命周期
 	ConnMaxIdleTime           time.Duration // 连接最大空闲时间
+	cacheConfig               *config.CacheConfig
 }
 
 func NewDbContext() *DbContext {
@@ -126,5 +134,6 @@ func NewDbContext() *DbContext {
 		MaxOpenConns:              10,
 		ConnMaxLifetime:           time.Hour * 1,
 		ConnMaxIdleTime:           time.Second * 10,
+		cacheConfig:               nil,
 	}
 }

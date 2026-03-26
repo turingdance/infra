@@ -77,7 +77,7 @@ func SignOssUrl(conf StorageConf, ossConf osskit.OssConf, reskey string, du time
 		err = _err
 		return
 	}
-	url, err = bucket.SignURL(reskey, oss.HTTPGet, du)
+	url, err = bucket.SignURL(reskey, oss.HTTPGet, int64(du.Seconds()))
 
 	return url, err
 }
