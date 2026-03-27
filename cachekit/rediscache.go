@@ -24,10 +24,5 @@ func (r *rediscache) Set(k string, v interface{}, d time.Duration) error {
 
 // 获得
 func (r *rediscache) Get(k string) (result interface{}, err error) {
-	cmd := r.ctrl.Rdb.Get(context.Background(), k)
-	if err = cmd.Err(); err != nil {
-		return nil, err
-	}
-	err = cmd.Scan(result)
-	return result, err
+	return r.ctrl.Rdb.Get(context.Background(), k).Result()
 }
